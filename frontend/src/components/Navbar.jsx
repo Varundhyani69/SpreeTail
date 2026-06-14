@@ -1,31 +1,59 @@
-export default function Navbar(){
+import { Link, useNavigate } from "react-router-dom";
 
-  function logout(){
+export default function Navbar() {
 
-    localStorage.removeItem(
-      "token"
+  const navigate = useNavigate();
+
+  async function logout() {
+
+  try {
+
+    await api.post(
+      "/auth/logout"
     );
 
-    window.location="/login";
+  } catch(err) {
+
+    console.log(err);
 
   }
 
-  return(
+  localStorage.removeItem(
+    "token"
+  );
 
-    <div className="bg-white border-b px-8 py-4 flex justify-between">
+  navigate(
+    "/login"
+  );
 
-      <h1 className="font-semibold">
-        Shared Expenses
-      </h1>
+}
 
-      <button
-        onClick={logout}
-        className="text-red-500"
-      >
-        Logout
-      </button>
+  return (
+    <nav className="bg-white border-b">
 
-    </div>
+      <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between">
 
+        <div className="flex gap-6">
+
+          <Link to="/">
+            Dashboard
+          </Link>
+
+          <Link to="/imports">
+            Imports
+          </Link>
+
+        </div>
+
+        <button
+          onClick={logout}
+          className="text-red-500"
+        >
+          Logout
+        </button>
+
+      </div>
+
+    </nav>
   );
 }

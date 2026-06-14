@@ -107,7 +107,19 @@ async function login(req, res) {
   }
 }
 
+async function logout(
+  req,
+  res
+) {
+
+  res.json({
+    message:
+      "Logged out successfully"
+  });
+
+}
+
 module.exports = {
-  register, login
+  register, login, logout
 };
 

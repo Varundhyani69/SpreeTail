@@ -1,15 +1,51 @@
 import {
   BrowserRouter,
   Routes,
-  Route
+  Route,
+  Navigate
 }
 from "react-router-dom";
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import GroupDetails from "./pages/GroupDetails";
-import ImportPage from "./pages/ImportPage";
+import Login
+from "./pages/Login";
+
+import Register
+from "./pages/Register";
+
+import Dashboard
+from "./pages/Dashboard";
+
+import GroupDetails
+from "./pages/GroupDetails";
+
+import ImportPage
+from "./pages/ImportPage";
+
+function PrivateRoute(
+  { children }
+){
+
+  const token =
+    localStorage.getItem(
+      "token"
+    );
+
+  if(
+    !token
+  ){
+
+    return (
+      <Navigate
+        to="/login"
+        replace
+      />
+    );
+
+  }
+
+  return children;
+
+}
 
 export default function App(){
 
@@ -21,27 +57,43 @@ export default function App(){
 
         <Route
           path="/login"
-          element={<Login />}
+          element={
+            <Login />
+          }
         />
 
         <Route
           path="/register"
-          element={<Register />}
+          element={
+            <Register />
+          }
         />
 
         <Route
           path="/"
-          element={<Dashboard />}
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
         />
 
         <Route
           path="/groups/:groupId"
-          element={<GroupDetails />}
+          element={
+            <PrivateRoute>
+              <GroupDetails />
+            </PrivateRoute>
+          }
         />
 
         <Route
           path="/imports"
-          element={<ImportPage />}
+          element={
+            <PrivateRoute>
+              <ImportPage />
+            </PrivateRoute>
+          }
         />
 
       </Routes>
@@ -49,4 +101,5 @@ export default function App(){
     </BrowserRouter>
 
   );
+
 }

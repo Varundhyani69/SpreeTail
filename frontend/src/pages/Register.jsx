@@ -1,7 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
-export default function Register(){
+export default function Register() {
+
+  const navigate =
+    useNavigate();
 
   const [name,setName] =
     useState("");
@@ -12,66 +16,69 @@ export default function Register(){
   const [password,setPassword] =
     useState("");
 
-  async function register(){
+  async function register() {
 
-    await api.post(
-      "/auth/register",
-      {
-        name,
-        email,
-        password
-      }
-    );
+    try {
 
-    window.location =
-      "/login";
+      await api.post(
+        "/auth/register",
+        {
+          name,
+          email,
+          password
+        }
+      );
+
+      navigate("/login");
+
+    } catch(err) {
+
+      alert(
+        err.response?.data?.error
+      );
+
+    }
 
   }
 
-  return(
+  return (
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="h-screen flex items-center justify-center bg-gray-50">
 
-      <div className="bg-white shadow rounded-lg p-8 w-96">
+      <div className="bg-white p-8 rounded-xl shadow w-96">
 
-        <h1 className="text-2xl font-semibold mb-6">
+        <h1 className="text-2xl font-semibold mb-5">
           Register
         </h1>
 
         <input
-          className="border w-full p-2 mb-3 rounded"
+          className="border w-full p-2 mb-3"
           placeholder="Name"
           onChange={e=>
-            setName(
-              e.target.value
-            )
+            setName(e.target.value)
           }
         />
 
         <input
-          className="border w-full p-2 mb-3 rounded"
+          className="border w-full p-2 mb-3"
           placeholder="Email"
           onChange={e=>
-            setEmail(
-              e.target.value
-            )
+            setEmail(e.target.value)
           }
         />
 
         <input
           type="password"
-          className="border w-full p-2 mb-4 rounded"
+          className="border w-full p-2 mb-4"
           placeholder="Password"
           onChange={e=>
-            setPassword(
-              e.target.value
-            )
+            setPassword(e.target.value)
           }
         />
 
         <button
           onClick={register}
-          className="w-full bg-black text-white p-2 rounded"
+          className="bg-black text-white w-full py-2 rounded"
         >
           Register
         </button>
@@ -79,7 +86,5 @@ export default function Register(){
       </div>
 
     </div>
-
   );
-
 }

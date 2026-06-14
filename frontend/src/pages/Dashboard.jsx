@@ -1,16 +1,20 @@
-import { useEffect,useState }
-from "react";
+import { useEffect } from "react";
+import { useState } from "react";
 
-import api from "../api/axios";
 import Navbar from "../components/Navbar";
 
-export default function Dashboard(){
+import CreateGroupModal
+from "../components/CreateGroupModal";
+
+import api from "../api/axios";
+
+export default function Dashboard() {
 
   const [groups,setGroups] =
     useState([]);
 
-  const [name,setName] =
-    useState("");
+  const [showModal,setShowModal] =
+    useState(false);
 
   useEffect(()=>{
 
@@ -18,69 +22,65 @@ export default function Dashboard(){
 
   },[]);
 
-  async function loadGroups(){
+  async function loadGroups() {
 
-    const res =
-      await api.get("/groups");
+    try {
 
-    setGroups(res.data);
+      const res =
+        await api.get(
+          "/groups"
+        );
+
+      setGroups(
+        res.data
+      );
+
+    } catch(err) {
+
+      console.log(err);
+
+    }
 
   }
 
-  async function createGroup(){
-
-    await api.post(
-      "/groups",
-      { name }
-    );
-
-    setName("");
-
-    loadGroups();
-
-  }
-
-  return(
+  return (
 
     <>
       <Navbar />
 
-      <div className="max-w-4xl mx-auto p-8">
+      <div className="max-w-5xl mx-auto p-8">
 
-        <h1 className="text-3xl mb-6">
-          Groups
-        </h1>
+        <div className="flex justify-between mb-6">
 
-        <div className="flex gap-2 mb-6">
-
-          <input
-            placeholder="Group name"
-            className="border p-2 flex-1 rounded"
-            value={name}
-            onChange={e=>
-              setName(e.target.value)
-            }
-          />
+          <h1 className="text-3xl font-semibold">
+            Groups
+          </h1>
 
           <button
-            onClick={createGroup}
-            className="bg-black text-white px-4 rounded"
+            onClick={()=>
+              setShowModal(true)
+            }
+            className="bg-black text-white px-4 py-2 rounded"
           >
-            Create
+            New Group
           </button>
 
         </div>
 
-        <div className="space-y-3">
+        <div className="grid gap-4">
 
           {groups.map(group=>(
 
             <a
               key={group.id}
               href={`/groups/${group.id}`}
-              className="block bg-white p-4 rounded shadow"
+              className="bg-white p-4 rounded-xl shadow border hover:shadow-md"
             >
-              {group.name}
+
+              <h2 className="font-medium">
+                {group.name}
+              </h2>
+
             </a>
 
           ))}
@@ -88,6 +88,15 @@ export default function Dashboard(){
         </div>
 
       </div>
+
+      <CreateGroupModal
+        open={showModal}
+        onClose={()=>
+          setShowModal(false)
+        }
+        reload={loadGroups}
+      />
+
     </>
   );
 }

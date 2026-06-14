@@ -141,7 +141,7 @@ async function getUserBreakdown(
 }
 
 function simplifyDebts(
-  balances
+  balances,userMap
 ) {
 
   const creditors = [];
@@ -190,11 +190,24 @@ function simplifyDebts(
       creditor.amount
     );
 
-    settlements.push({
-      from: debtor.userId,
-      to: creditor.userId,
-      amount
-    });
+   settlements.push({
+
+  from:
+    userMap[
+      debtor.userId
+    ],
+
+  to:
+    userMap[
+      creditor.userId
+    ],
+
+  amount:
+    Number(
+      amount.toFixed(2)
+    )
+
+});
 
     debtor.amount -= amount;
     creditor.amount -= amount;
@@ -225,9 +238,34 @@ async function getBalanceUsers(
   return result.rows;
 
 }
+async function getUserMap() {
+
+  const result =
+    await pool.query(
+      `
+      SELECT
+        id,
+        name
+      FROM users
+      `
+    );
+
+  const map = {};
+
+  result.rows.forEach(user => {
+
+    map[user.id] =
+      user.name;
+
+  });
+
+  return map;
+
+}
 module.exports = {
   calculateBalances,
   getUserBreakdown,
   simplifyDebts,
-  getBalanceUsers
+  getBalanceUsers,
+  getUserMap
 };

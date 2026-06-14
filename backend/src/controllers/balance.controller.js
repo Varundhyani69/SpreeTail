@@ -93,11 +93,16 @@ async function getSettlementSummary(req, res) {
         req.params.groupId
       );
 
-    const summary =
-      balanceService.simplifyDebts(
-        balances
-      );
+    const userMap =
+  await balanceService
+    .getUserMap();
 
+const summary =
+  balanceService
+    .simplifyDebts(
+      balances,
+      userMap
+    );
     res.json(summary);
 
   } catch(error) {
