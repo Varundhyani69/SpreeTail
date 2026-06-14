@@ -123,3 +123,61 @@ Upload
 Result:
 
 Matches assignment requirements and user approval expectations.
+
+### Case 7 - Membership Validation During Import
+
+AI Suggestion:
+
+Import all listed participants for every expense.
+
+Problem:
+
+Ignored membership timelines and charged users for expenses before joining or after leaving a group.
+
+Correction:
+
+Added membership validation using joined_at and left_at dates before creating expense participants.
+
+Result:
+
+Imported expenses now respect historical group membership.
+
+---
+
+### Case 8 - Percentage Split Validation
+
+AI Suggestion:
+
+Create expenses before validating percentage totals.
+
+Problem:
+
+Invalid percentage rows could create expenses without participants.
+
+Correction:
+
+Moved percentage validation before expense creation.
+
+Result:
+
+Invalid percentage rows are rejected cleanly and logged as anomalies.
+
+---
+
+### Case 9 - Import Re-execution Protection
+
+AI Suggestion:
+
+Allow imports to be executed repeatedly.
+
+Problem:
+
+Could create duplicate expenses and settlements.
+
+Correction:
+
+Added status checking and blocked execution of completed imports.
+
+Result:
+
+Imports are idempotent and safer to operate.

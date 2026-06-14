@@ -376,3 +376,85 @@ Otherwise:
 
 - Participant excluded
 - Import anomaly created
+
+## Supported Import Split Types
+
+### Equal Split
+
+Expense amount is divided equally among all valid participants.
+
+---
+
+### Percentage Split
+
+Participant share is calculated using percentages provided in split_details.
+
+Validation:
+
+Total percentage must equal 100%.
+
+Example:
+
+Aisha 30%
+
+Rohan 30%
+
+Priya 20%
+
+Meera 20%
+
+---
+
+### Unequal Split
+
+Participant share is taken directly from split_details.
+
+Validation:
+
+Sum of participant amounts must equal expense amount.
+
+Example:
+
+Rohan 700
+
+Priya 400
+
+Meera 400
+
+Expense Amount = 1500
+
+---
+
+## Import Execution Statistics
+
+Each execution records:
+
+* Processed Rows
+* Imported Expenses
+* Imported Settlements
+* Skipped Rows
+* Generated Anomalies
+
+Purpose:
+
+Provide transparency and auditing of import results.
+
+---
+
+## Settlement Conversion
+
+Rows identified as settlement transactions are converted into settlement records instead of expenses.
+
+Reason:
+
+Settlement payments reduce balances but should not affect expense totals.
+
+---
+
+## Currency Conversion
+
+USD expenses are converted to INR during import execution.
+
+Reason:
+
+Allows balances to be maintained in a single currency system.

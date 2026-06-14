@@ -346,3 +346,61 @@ Participants are included only if they were active members on the expense date.
 
 Reason:
 Prevents charging users for expenses before they joined or after they left the group.
+
+## D022 - Percentage Split Validation
+
+### Decision
+
+Percentage splits are imported only when percentages total exactly 100%.
+
+### Reason
+
+Prevents partial or over-allocated expenses.
+
+### Example
+
+30% + 30% + 30% + 20% = 110%
+
+Import is rejected and anomaly is created.
+
+---
+
+## D023 - Unequal Split Validation
+
+### Decision
+
+Unequal split totals must equal the expense amount.
+
+### Reason
+
+Ensures participant allocations fully account for the expense.
+
+### Example
+
+Expense Amount = ₹1500
+
+Rohan = ₹700
+
+Priya = ₹400
+
+Meera = ₹400
+
+Total = ₹1500
+
+Import accepted.
+
+---
+
+## D024 - Import Execution Statistics
+
+### Decision
+
+Track processed, imported, skipped, and anomalous rows during execution.
+
+### Reason
+
+Provides visibility into import quality and processing outcomes.
+
+### Benefit
+
+Users can quickly understand what happened during an import without inspecting database tables.
