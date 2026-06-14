@@ -79,3 +79,25 @@ Expenses after March 31 should not affect her balance.
 Sam joins on April 15.
 
 Expenses before April 15 should not affect his balance.
+
+## expenses
+
+Stores all shared expenses.
+
+Fields:
+- title
+- amount
+- currency
+- paid_by
+- expense_date
+- split_type
+
+## expense_participants
+
+Stores each participant's share.
+
+Supports:
+- Equal Split
+- Percentage Split
+- Exact Amount Split
+- Shares Split
