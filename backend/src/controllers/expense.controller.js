@@ -27,6 +27,33 @@ async function createExpense(
 
 }
 
+async function getExpenses(
+  req,
+  res
+) {
+
+  try {
+
+    const expenses =
+      await expenseService
+        .getExpensesByGroup(
+          req.params.groupId
+        );
+
+    res.json(
+      expenses
+    );
+
+  } catch(error) {
+
+    res.status(500).json({
+      error:error.message
+    });
+
+  }
+
+}
+
 module.exports = {
-  createExpense
+  createExpense,getExpenses
 };

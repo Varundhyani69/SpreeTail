@@ -100,6 +100,33 @@ async function createExpense(data) {
   return expense;
 }
 
+async function getExpensesByGroup(
+  groupId
+) {
+
+  const result =
+    await pool.query(
+      `
+      SELECT
+        e.*,
+        u.name AS payer_name
+      FROM expenses e
+
+      JOIN users u
+        ON u.id = e.paid_by
+
+      WHERE e.group_id = $1
+
+      ORDER BY
+        e.expense_date DESC
+      `,
+      [groupId]
+    );
+
+  return result.rows;
+
+}
+
 module.exports = {
-  createExpense
+  createExpense,getExpensesByGroup
 };

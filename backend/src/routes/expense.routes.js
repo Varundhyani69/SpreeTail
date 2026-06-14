@@ -8,7 +8,8 @@ const authenticate =
 require("../middleware/auth.middleware");
 
 const {
-  createExpense
+  createExpense,
+  getExpenses
 } = require("../controllers/expense.controller");
 
 router.post(
@@ -16,5 +17,9 @@ router.post(
   authenticate,
   createExpense
 );
-
+router.get(
+  "/",
+  authenticate,
+  getExpenses
+);
 module.exports = router;

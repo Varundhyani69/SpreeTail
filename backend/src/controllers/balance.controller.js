@@ -1,21 +1,61 @@
 const balanceService =
 require("../service/balance.service.js");
 
-async function getGroupBalances(req, res) {
+async function getGroupBalances(
+  req,
+  res
+) {
 
   try {
 
     const balances =
-      await balanceService.calculateBalances(
-        req.params.groupId
+      await balanceService
+        .calculateBalances(
+          req.params.groupId
+        );
+
+    const users =
+      await balanceService
+        .getBalanceUsers(
+          Object.keys(
+            balances
+          )
+        );
+
+    const userMap = {};
+
+    users.forEach(user=>{
+
+      userMap[user.id] =
+        user.name;
+
+    });
+
+    const response =
+
+      Object.entries(
+        balances
+      ).map(
+        ([userId,balance])=>({
+
+          userId,
+
+          name:
+            userMap[userId],
+
+          balance
+
+        })
       );
 
-    res.json(balances);
+    res.json(
+      response
+    );
 
   } catch(error) {
 
     res.status(500).json({
-      error: error.message
+      error:error.message
     });
 
   }

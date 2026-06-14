@@ -206,9 +206,28 @@ function simplifyDebts(
 
   return settlements;
 }
+async function getBalanceUsers(
+  userIds
+){
 
+  const result =
+    await pool.query(
+      `
+      SELECT
+        id,
+        name
+      FROM users
+      WHERE id = ANY($1)
+      `,
+      [userIds]
+    );
+
+  return result.rows;
+
+}
 module.exports = {
   calculateBalances,
   getUserBreakdown,
-  simplifyDebts
+  simplifyDebts,
+  getBalanceUsers
 };

@@ -60,6 +60,18 @@ export default function Login(){
         >
           Login
         </button>
+        <p className="mt-4">
+
+          No account?
+
+        <a
+          href="/register"
+          className="underline ml-1"
+        >
+          Register
+        </a>
+
+      </p>
 
       </div>
 

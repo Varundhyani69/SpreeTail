@@ -5,17 +5,11 @@ import {
 }
 from "react-router-dom";
 
-import Login
-from "./pages/Login";
-
-import Dashboard
-from "./pages/Dashboard";
-
-import GroupDetails
-from "./pages/GroupDetails";
-
-import ImportPage
-from "./pages/ImportPage";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import GroupDetails from "./pages/GroupDetails";
+import ImportPage from "./pages/ImportPage";
 
 export default function App(){
 
@@ -28,6 +22,11 @@ export default function App(){
         <Route
           path="/login"
           element={<Login />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
         />
 
         <Route

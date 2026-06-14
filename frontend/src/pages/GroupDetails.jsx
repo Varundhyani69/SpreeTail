@@ -1,106 +1,83 @@
-import {
-  useEffect,
-  useState
-}
-from "react";
+import { useState } from "react";
+import { useParams } from "react-router-dom";
 
-import {
-  useParams
-}
-from "react-router-dom";
-
-import api
-from "../api/axios";
+import Navbar from "../components/Navbar";
+import MembersTab from "../components/MembersTab";
+import ExpensesTab from "../components/ExpensesTab";
+import BalancesTab from "../components/BalancesTab";
+import SettlementsTab from "../components/SettlementsTab";
 
 export default function GroupDetails(){
 
-  const {groupId} =
+  const { groupId } =
     useParams();
 
-  const [members,setMembers] =
-    useState([]);
-
-  const [balances,setBalances] =
-    useState({});
-
-  useEffect(()=>{
-
-    load();
-
-  },[]);
-
-  async function load(){
-
-    const m =
-      await api.get(
-        `/groups/${groupId}/members`
-      );
-
-    const b =
-      await api.get(
-        `/groups/${groupId}/balances`
-      );
-
-    setMembers(m.data);
-
-    setBalances(b.data);
-
-  }
+  const [tab,setTab] =
+    useState("members");
 
   return(
+    <>
+      <Navbar />
 
-    <div className="max-w-5xl mx-auto p-8">
+      <div className="max-w-6xl mx-auto p-8">
 
-      <h1 className="text-3xl mb-6">
-        Group
-      </h1>
+        <div className="flex gap-3 mb-6">
 
-      <div className="grid md:grid-cols-2 gap-6">
-
-        <div>
-
-          <h2 className="mb-2">
+          <button
+            onClick={()=>setTab("members")}
+            className="border px-4 py-2 rounded"
+          >
             Members
-          </h2>
+          </button>
 
-          {members.map(member=>(
-            <div
-              key={member.id}
-              className="bg-white p-3 mb-2 rounded shadow"
-            >
-              {member.name}
-            </div>
-          ))}
+          <button
+            onClick={()=>setTab("expenses")}
+            className="border px-4 py-2 rounded"
+          >
+            Expenses
+          </button>
 
-        </div>
-
-        <div>
-
-          <h2 className="mb-2">
+          <button
+            onClick={()=>setTab("balances")}
+            className="border px-4 py-2 rounded"
+          >
             Balances
-          </h2>
+          </button>
 
-          {
-            Object.entries(
-              balances
-            ).map(
-              ([id,balance])=>(
-                <div
-                  key={id}
-                  className="bg-white p-3 mb-2 rounded shadow"
-                >
-                  {id} :
-                  ₹{balance}
-                </div>
-              )
-            )
-          }
+          <button
+            onClick={()=>setTab("settlements")}
+            className="border px-4 py-2 rounded"
+          >
+            Settlements
+          </button>
 
         </div>
+
+        {tab==="members" &&
+          <MembersTab
+            groupId={groupId}
+          />
+        }
+
+        {tab==="expenses" &&
+          <ExpensesTab
+            groupId={groupId}
+          />
+        }
+
+        {tab==="balances" &&
+          <BalancesTab
+            groupId={groupId}
+          />
+        }
+
+        {tab==="settlements" &&
+          <SettlementsTab
+            groupId={groupId}
+          />
+        }
 
       </div>
-
-    </div>
-
+    </>
   );
 }
