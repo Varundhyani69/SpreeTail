@@ -9,6 +9,24 @@ async function findUserByEmail(email) {
   return result.rows[0];
 }
 
+async function getUserGroups(userId) {
+
+  const result = await pool.query(
+    `
+    SELECT g.*
+    FROM groups g
+
+    JOIN group_memberships gm
+    ON gm.group_id = g.id
+
+    WHERE gm.user_id = $1
+    `,
+    [userId]
+  );
+
+  return result.rows;
+}
+
 module.exports = {
-  findUserByEmail
+  findUserByEmail,getUserGroups
 };
