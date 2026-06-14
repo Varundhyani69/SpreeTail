@@ -1,13 +1,27 @@
 const express = require("express");
-const authenticate = require("../middleware/auth.middleware");
-const { getGroupBalances } = require("../controllers/balance.controller");
-const router = express.Router();
 
+const router = express.Router({
+  mergeParams: true
+});
+
+const authenticate =
+require("../middleware/auth.middleware");
+
+const {
+  getGroupBalances,
+  getUserBreakdown
+} = require("../controllers/balance.controller");
 
 router.get(
-  "/:groupId/balances",
+  "/",
   authenticate,
   getGroupBalances
+);
+
+router.get(
+  "/breakdown",
+  authenticate,
+  getUserBreakdown
 );
 
 module.exports = router;

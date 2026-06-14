@@ -1,7 +1,19 @@
 const express = require("express");
-const authenticate = require("../middleware/auth.middleware");
-const { createGroup, leaveGroup, getGroupMembers } = require("../service/group.service");
-const { addMember, getGroups } = require("../controllers/group.controller");
+
+const authenticate =
+require("../middleware/auth.middleware");
+
+const {
+  createGroup,
+  leaveGroup,
+  getGroupMembers,
+  addMember,
+  getGroups
+} = require("../controllers/group.controller");
+
+const balanceRoutes =
+require("./balance.routes");
+
 const router = express.Router();
 
 router.get(
@@ -16,11 +28,16 @@ router.post(
   createGroup
 );
 
+router.use(
+  "/:groupId/balances",
+  balanceRoutes
+);
+
 router.post(
-    "/:groupId/members",
-    authenticate,
-    addMember
-)
+  "/:groupId/members",
+  authenticate,
+  addMember
+);
 
 router.patch(
   "/:groupId/members/:userId/leave",

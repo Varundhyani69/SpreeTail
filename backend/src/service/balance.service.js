@@ -76,3 +76,46 @@ async function calculateBalances(groupId) {
 
   return balances;
 }
+async function getUserBreakdown(
+  groupId,
+  userId
+) {
+
+  const result = await pool.query(
+    `
+    SELECT
+
+      e.id,
+      e.title,
+      e.amount,
+      e.expense_date,
+
+      ep.share_amount,
+
+      payer.name AS payer_name
+
+    FROM expense_participants ep
+
+    JOIN expenses e
+      ON ep.expense_id = e.id
+
+    JOIN users payer
+      ON payer.id = e.paid_by
+
+    WHERE
+      e.group_id = $1
+      AND ep.user_id = $2
+
+    ORDER BY e.expense_date DESC
+    `,
+    [groupId, userId]
+  );
+
+  return result.rows;
+}
+
+module.exports = {
+    getGroupExpenseParticipants,
+  calculateBalances,
+  getUserBreakdown
+};

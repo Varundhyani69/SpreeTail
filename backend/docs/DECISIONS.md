@@ -70,3 +70,21 @@ Preserve membership history.
 ### Reason
 
 Historical expense calculations require knowledge of who belonged to the group at a specific date.
+
+
+## D005 - Ledger Based Balance Calculation
+
+### Alternatives
+
+1. Store running balances
+2. Recalculate balances from transactions
+
+### Decision
+
+Recalculate from transactions.
+
+### Reason
+
+Balances remain consistent and auditable.
+
+Every balance can be traced back to underlying expenses.

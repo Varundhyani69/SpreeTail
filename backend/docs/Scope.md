@@ -101,3 +101,15 @@ Supports:
 - Percentage Split
 - Exact Amount Split
 - Shares Split
+
+## Balance Engine
+
+Balances are calculated using a ledger approach.
+
+For each expense:
+
+1. Payer receives full credit.
+2. Participants receive debt equal to their share.
+3. Net balance is computed as:
+
+balance = credits - obligations

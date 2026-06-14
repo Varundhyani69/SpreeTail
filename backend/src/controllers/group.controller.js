@@ -111,5 +111,9 @@ async function getGroupMembers(req, res) {
 
 }
 module.exports = {
-  createGroup,addMember,getGroups,leaveGroup,getGroupMembers
+  createGroup,
+  getGroups,
+  addMember,
+  leaveGroup,
+  getGroupMembers
 };
