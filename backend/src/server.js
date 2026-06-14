@@ -4,9 +4,10 @@ require("dotenv").config();
 const PORT = process.env.PORT || 5000;
 const app = express();
 const pool = require("./config/connection.js")
+const authRoutes = require("./routes/auth.routes");
 app.use(cors());
 app.use(express.json());
-
+app.use("/api/auth", authRoutes);
 app.get("/", async (req, res) => {
     try {
         const result = await pool.query("SELECT NOW()");
