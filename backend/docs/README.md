@@ -22,3 +22,8 @@ Database
 
 * Backend project initialized
 * Express server configured
+
+### Database
+
+- PostgreSQL database configured
+- Connection verified
