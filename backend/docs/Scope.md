@@ -24,3 +24,17 @@ Columns:
 * name
 * created_by
 * created_at
+
+## group_memberships
+
+Purpose:
+Tracks membership history.
+
+Columns:
+- group_id
+- user_id
+- joined_at
+- left_at
+
+Reason:
+Allows historical expense calculations when members join or leave.
