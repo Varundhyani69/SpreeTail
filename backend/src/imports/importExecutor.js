@@ -4,10 +4,20 @@ require("../config/connection");
 const {
   normalizeAmount,
   normalizeDate,
-  normalizeUser
+  normalizeUser,
+  normalizeCurrency
 } = require(
   "./normalizers"
 );
+
+const validUsers = [
+  "Aisha",
+  "Rohan",
+  "Priya",
+  "Meera",
+  "Dev",
+  "Sam"
+];
 
 async function getImportRows(
   importId
@@ -52,7 +62,7 @@ async function executeImport(
     const row =
       rowRecord.raw_data;
 
-    // Skip non-equal splits for now
+    // Only equal splits for now
 
     if (
       row.split_type !==
@@ -62,6 +72,22 @@ async function executeImport(
       continue;
 
     }
+
+    const participants =
+      row.split_with
+        ?.split(";")
+        .map(
+          person =>
+            normalizeUser(
+              person.trim()
+            )
+        )
+        .filter(
+          person =>
+            validUsers.includes(
+              person
+            )
+        ) || [];
 
     const normalizedRow = {
 
@@ -87,20 +113,15 @@ async function executeImport(
         ),
 
       currency:
-        row.currency,
+        normalizeCurrency(
+          row.currency
+        ),
 
       splitType:
         row.split_type,
 
       splitWith:
-        row.split_with
-          ?.split(";")
-          .map(
-            person =>
-              normalizeUser(
-                person.trim()
-              )
-          ) || [],
+        participants,
 
       notes:
         row.notes || ""

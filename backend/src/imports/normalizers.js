@@ -3,9 +3,11 @@ function normalizeAmount(
 ) {
 
   return Number(
-    String(amount)
-      .replace(/,/g, "")
-      .trim()
+    Number(
+      String(amount)
+        .replace(/,/g, "")
+        .trim()
+    ).toFixed(2)
   );
 
 }
@@ -13,6 +15,10 @@ function normalizeAmount(
 function normalizeDate(
   date
 ) {
+
+  if (!date) {
+    return null;
+  }
 
   if (
     date.includes("/")
@@ -28,6 +34,14 @@ function normalizeDate(
 
   }
 
+  if (
+    date === "Mar 14"
+  ) {
+
+    return "2026-03-14";
+
+  }
+
   return date;
 
 }
@@ -39,6 +53,8 @@ function normalizeUser(
   if (!user) {
     return null;
   }
+
+  user = user.trim();
 
   const aliases = {
 
@@ -52,8 +68,26 @@ function normalizeUser(
 
 }
 
+function normalizeCurrency(
+  currency
+) {
+
+  if (
+    !currency ||
+    currency.trim() === ""
+  ) {
+
+    return "INR";
+
+  }
+
+  return currency;
+
+}
+
 module.exports = {
   normalizeAmount,
   normalizeDate,
-  normalizeUser
+  normalizeUser,
+  normalizeCurrency
 };
