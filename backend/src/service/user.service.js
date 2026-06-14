@@ -26,7 +26,32 @@ async function getUserGroups(userId) {
 
   return result.rows;
 }
+async function addMember(
+  groupId,
+  userId,
+  joinedAt
+) {
+  const result = await pool.query(
+    `
+    INSERT INTO group_memberships(
+      id,
+      group_id,
+      user_id,
+      joined_at
+    )
+    VALUES ($1,$2,$3,$4)
+    RETURNING *
+    `,
+    [
+      uuidv4(),
+      groupId,
+      userId,
+      joinedAt
+    ]
+  );
 
+  return result.rows[0];
+}
 module.exports = {
-  findUserByEmail,getUserGroups
+  findUserByEmail,getUserGroups,addMember
 };

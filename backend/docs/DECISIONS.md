@@ -55,3 +55,18 @@ Simple implementation suitable for SPA frontend and REST API architecture.
 ### Tradeoff
 
 Requires token management on client side.
+
+## D004 - Membership Records Are Never Deleted
+
+### Alternatives
+
+1. Delete membership rows
+2. Preserve membership history
+
+### Decision
+
+Preserve membership history.
+
+### Reason
+
+Historical expense calculations require knowledge of who belonged to the group at a specific date.
