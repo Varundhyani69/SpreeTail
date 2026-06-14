@@ -87,6 +87,29 @@ async function leaveGroup(req, res) {
 
   }
 }
+
+async function getGroupMembers(req, res) {
+
+  try {
+
+    const { groupId } = req.params;
+
+    const members =
+      await groupService.getGroupMembers(
+        groupId
+      );
+
+    res.json(members);
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+
+  }
+
+}
 module.exports = {
-  createGroup,addMember,getGroups,leaveGroup
+  createGroup,addMember,getGroups,leaveGroup,getGroupMembers
 };

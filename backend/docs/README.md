@@ -43,3 +43,16 @@ Endpoints
 POST /api/auth/register
 
 POST /api/auth/login
+
+## Group Management
+
+Implemented Features
+
+* Create Groups
+* List Groups
+* Add Members
+* View Members
+* Member Join Dates
+* Member Leave Dates
+
+Membership history is preserved to support historical balance calculations.

@@ -59,7 +59,31 @@ async function leaveGroup(
 
   return result.rows[0];
 }
+async function getGroupMembers(groupId) {
+
+  const result = await pool.query(
+    `
+    SELECT
+      u.id,
+      u.name,
+      u.email,
+      gm.joined_at,
+      gm.left_at
+    FROM group_memberships gm
+
+    JOIN users u
+      ON u.id = gm.user_id
+
+    WHERE gm.group_id = $1
+
+    ORDER BY gm.joined_at ASC
+    `,
+    [groupId]
+  );
+
+  return result.rows;
+}
 
 module.exports = {
-  createGroup, getUserGroups,leaveGroup
+  createGroup, getUserGroups,leaveGroup,getGroupMembers
 };
