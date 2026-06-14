@@ -29,6 +29,13 @@ const validUsers = [
   "Sam"
 ];
 
+const {
+  parseUnequalDetails,
+  isUnequalValid
+} = require(
+  "./unequalParser"
+);
+
 async function getUserIdByName(
   name
 ) {
@@ -419,14 +426,15 @@ async function executeImport(
 
 }
 
-    if (
-        ![
-            "equal",
-            "percentage"
-        ].includes(
-            row.split_type
-        )
-        ) {
+   if (
+  ![
+    "equal",
+    "percentage",
+    "unequal"
+  ].includes(
+    row.split_type
+  )
+){
 
         continue;
 
@@ -616,6 +624,39 @@ if (
 
 }
 
+let unequalDetails =
+  null;
+
+if (
+  normalizedRow.splitType ===
+  "unequal"
+) {
+
+  unequalDetails =
+    parseUnequalDetails(
+      row.split_details
+    );
+
+  if (
+    !isUnequalValid(
+      unequalDetails,
+      normalizedRow.amount
+    )
+  ) {
+
+    await createImportAnomaly(
+      importId,
+      normalizedRow.rowNumber,
+      "INVALID_UNEQUAL_TOTAL",
+      "Split amounts do not match expense amount"
+    );
+
+    continue;
+
+  }
+
+}
+
 // --------------------
 // Create expense
 // --------------------
@@ -656,6 +697,17 @@ else if (
 
 }
 
+else if (
+  normalizedRow.splitType ===
+  "unequal"
+) {
+
+  await createUnequalParticipants(
+    expense.id,
+    unequalDetails
+  );
+
+}
     importedExpenses++;
 
   }
@@ -683,7 +735,53 @@ else if (
 
 }
 
+async function createUnequalParticipants(
+  expenseId,
+  details
+) {
 
+  for (
+    const item
+    of details
+  ) {
+
+    const userId =
+      await getUserIdByName(
+        item.name
+      );
+
+    if (
+      !userId
+    ) {
+
+      continue;
+
+    }
+
+    await pool.query(
+      `
+      INSERT INTO
+      expense_participants (
+        id,
+        expense_id,
+        user_id,
+        share_amount
+      )
+      VALUES (
+        $1,$2,$3,$4
+      )
+      `,
+      [
+        uuidv4(),
+        expenseId,
+        userId,
+        item.amount
+      ]
+    );
+
+  }
+
+}
 
 async function createSettlement(
   payerId,
