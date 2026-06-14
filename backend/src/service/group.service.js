@@ -154,6 +154,85 @@ async function isMemberOnDate(
 
   return result.rows.length > 0;
 }
+async function addMemberByEmail(
+  groupId,
+  email,
+  joinedAt
+) {
+
+  const userResult =
+    await pool.query(
+      `
+      SELECT id
+      FROM users
+      WHERE email = $1
+      `,
+      [email]
+    );
+
+  if (
+    userResult.rows.length === 0
+  ) {
+
+    throw new Error(
+      "User not found"
+    );
+
+  }
+
+  const userId =
+    userResult.rows[0].id;
+
+  const existing =
+    await pool.query(
+      `
+      SELECT id
+      FROM group_memberships
+      WHERE group_id = $1
+      AND user_id = $2
+      AND left_at IS NULL
+      `,
+      [
+        groupId,
+        userId
+      ]
+    );
+
+  if (
+    existing.rows.length > 0
+  ) {
+
+    throw new Error(
+      "User already in group"
+    );
+
+  }
+
+  const result =
+    await pool.query(
+      `
+      INSERT INTO group_memberships (
+        id,
+        group_id,
+        user_id,
+        joined_at
+      )
+      VALUES (
+        $1,$2,$3,$4
+      )
+      RETURNING *
+      `,
+      [
+        uuidv4(),
+        groupId,
+        userId,
+        joinedAt
+      ]
+    );
+
+  return result.rows[0];
+
+}
 module.exports = {
-  createGroup, getUserGroups,leaveGroup,getGroupMembers,addMember,isMemberOnDate
+  createGroup, getUserGroups,leaveGroup,getGroupMembers,addMember,isMemberOnDate,addMemberByEmail
 };

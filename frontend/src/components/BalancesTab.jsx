@@ -8,7 +8,7 @@ export default function BalancesTab(
 ){
 
   const [balances,setBalances] =
-    useState({});
+  useState([]);
 
   const [summary,setSummary] =
     useState([]);
@@ -51,16 +51,30 @@ export default function BalancesTab(
           Balances
         </h2>
 
-        {Object.entries(
-          balances
-        ).map(([id,amount])=>(
+        {balances.map(user => (
 
-          <div key={id}>
-            {id} :
-            ₹{Number(amount).toFixed(2)}
-          </div>
+  <div
+    key={user.userId}
+    className="flex justify-between py-2 border-b"
+  >
 
-        ))}
+    <span>
+      {user.name}
+    </span>
+
+    <span
+      className={
+        user.balance >= 0
+          ? "text-green-600"
+          : "text-red-600"
+      }
+    >
+      ₹{Number(user.balance).toFixed(2)}
+    </span>
+
+  </div>
+
+))}
 
       </div>
 

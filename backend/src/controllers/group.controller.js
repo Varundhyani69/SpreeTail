@@ -43,16 +43,16 @@ async function addMember(req, res) {
       req.params;
 
     const {
-      userId,
-      joinedAt
-    } = req.body;
+  email,
+  joinedAt
+} = req.body;
 
-    const member =
-      await groupService.addMember(
-        groupId,
-        userId,
-        joinedAt
-      );
+const member =
+  await groupService.addMemberByEmail(
+    groupId,
+    email,
+    joinedAt
+  );
 
     res.status(201).json(member);
 

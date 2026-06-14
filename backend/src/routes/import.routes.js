@@ -17,7 +17,9 @@ const {
 const { runImport } = require("../controllers/import.controller");
 
 const router =
-express.Router();
+express.Router({
+  mergeParams: true
+});
 
 const upload =
 multer({

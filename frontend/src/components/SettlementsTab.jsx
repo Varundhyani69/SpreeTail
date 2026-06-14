@@ -7,65 +7,102 @@ export default function SettlementsTab(
   { groupId }
 ){
 
-  const [payerId,setPayerId] =
-    useState("");
+  const [
+    payerEmail,
+    setPayerEmail
+  ] = useState("");
 
   const [
-    receiverId,
-    setReceiverId
+    receiverEmail,
+    setReceiverEmail
   ] = useState("");
 
   const [amount,setAmount] =
     useState("");
 
+  const [
+    settlementDate,
+    setSettlementDate
+  ] = useState(
+    new Date()
+      .toISOString()
+      .split("T")[0]
+  );
+
+  const [notes,setNotes] =
+    useState("");
+
   async function create(){
 
-    await api.post(
-      `/groups/${groupId}/settlements`,
-      {
-        payerId,
-        receiverId,
-        amount
-      }
-    );
+    try {
 
-    alert(
-      "Settlement created"
-    );
+      await api.post(
+        `/groups/${groupId}/settlements`,
+        {
+          payerEmail,
+          receiverEmail,
+          amount:
+            Number(amount),
+          settlementDate,
+          notes
+        }
+      );
+
+      alert(
+        "Settlement created"
+      );
+
+      setPayerEmail("");
+      setReceiverEmail("");
+      setAmount("");
+      setNotes("");
+
+    } catch(error){
+
+      alert(
+        error.response?.data?.error
+        || error.message
+      );
+
+    }
 
   }
 
   return(
 
-    <div className="bg-white p-6 rounded shadow">
+    <div className="bg-white p-6 rounded-xl shadow">
 
-      <h2 className="text-xl mb-4">
+      <h2 className="text-xl font-semibold mb-4">
         Add Settlement
       </h2>
 
       <input
-        placeholder="Payer ID"
-        className="border p-2 w-full mb-3"
+        value={payerEmail}
+        placeholder="Payer Email"
+        className="border p-2 w-full mb-3 rounded"
         onChange={e=>
-          setPayerId(
+          setPayerEmail(
             e.target.value
           )
         }
       />
 
       <input
-        placeholder="Receiver ID"
-        className="border p-2 w-full mb-3"
+        value={receiverEmail}
+        placeholder="Receiver Email"
+        className="border p-2 w-full mb-3 rounded"
         onChange={e=>
-          setReceiverId(
+          setReceiverEmail(
             e.target.value
           )
         }
       />
 
       <input
+        type="number"
+        value={amount}
         placeholder="Amount"
-        className="border p-2 w-full mb-3"
+        className="border p-2 w-full mb-3 rounded"
         onChange={e=>
           setAmount(
             e.target.value
@@ -73,11 +110,34 @@ export default function SettlementsTab(
         }
       />
 
+      <input
+        type="date"
+        value={settlementDate}
+        className="border p-2 w-full mb-3 rounded"
+        onChange={e=>
+          setSettlementDate(
+            e.target.value
+          )
+        }
+      />
+
+      <textarea
+        value={notes}
+        placeholder="Notes (optional)"
+        className="border p-2 w-full mb-4 rounded"
+        rows={3}
+        onChange={e=>
+          setNotes(
+            e.target.value
+          )
+        }
+      />
+
       <button
         onClick={create}
-        className="bg-black text-white px-4 py-2 rounded"
+        className="bg-black text-white px-4 py-2 rounded hover:opacity-90"
       >
-        Save
+        Create Settlement
       </button>
 
     </div>

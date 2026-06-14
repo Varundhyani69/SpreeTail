@@ -86,22 +86,24 @@ async function uploadCsv(
     // ------------------
 
     await pool.query(
-      `
-      INSERT INTO imports (
-        id,
-        filename,
-        uploaded_by,
-        status
-      )
-      VALUES ($1,$2,$3,$4)
-      `,
-      [
-        importId,
-        req.file.originalname,
-        req.user.id,
-        "PENDING"
-      ]
-    );
+`
+INSERT INTO imports (
+  id,
+  filename,
+  uploaded_by,
+  group_id,
+  status
+)
+VALUES ($1,$2,$3,$4,$5)
+`,
+[
+  importId,
+  req.file.originalname,
+  req.user.id,
+  groupId,
+  "PENDING"
+]
+);
 
     // ------------------
     // Save raw CSV rows

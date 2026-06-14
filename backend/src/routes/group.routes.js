@@ -22,6 +22,14 @@ require("./balance.routes");
 
 const router = express.Router();
 
+const importRoutes =
+require("./import.routes");
+
+router.use(
+  "/:groupId/imports",
+  importRoutes
+);
+
 router.get(
   "/",
   authenticate,
@@ -48,6 +56,7 @@ router.use(
   "/:groupId/settlements",
   settlementRoutes
 );
+
 
 router.post(
   "/:groupId/members",

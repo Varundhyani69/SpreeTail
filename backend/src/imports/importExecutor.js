@@ -342,26 +342,37 @@ async function executeImport(
 ) {
 
   const importResult =
-    await pool.query(
-      `
-      SELECT status
-      FROM imports
-      WHERE id = $1
-      `,
-      [importId]
-    );
+  await pool.query(
+    `
+    SELECT status, group_id
+    FROM imports
+    WHERE id = $1
+    `,
+    [importId]
+  );
 
-  if (
-    importResult.rows[0]
-      ?.status ===
-    "COMPLETED"
-  ) {
+const groupId =
+  importResult.rows[0]
+    ?.group_id;
+    
+if (!groupId) {
 
-    throw new Error(
-      "Import already executed"
-    );
+  throw new Error(
+    "Import is not associated with a group"
+  );
 
-  }
+}
+if (
+  importResult.rows[0]
+    ?.status ===
+  "COMPLETED"
+) {
+
+  throw new Error(
+    "Import already executed"
+  );
+
+}
 
   const rows =
     await getImportRows(
@@ -584,7 +595,7 @@ async function executeImport(
   await isMemberActive(
     participant,
     normalizedRow.expenseDate,
-    process.env.IMPORT_GROUP_ID
+    groupId
   );
 
       if (
@@ -876,13 +887,13 @@ async function createSettlement(
       RETURNING *
       `,
       [
-  uuidv4(),
-  process.env.IMPORT_GROUP_ID,
-  payerId,
-  receiverId,
-  amount,
-  settlementDate
-]
+        uuidv4(),
+        process.env.IMPORT_GROUP_ID,
+        payerId,
+        receiverId,
+        amount,
+        settlementDate
+        ]
     );
 
   return result.rows[0];
