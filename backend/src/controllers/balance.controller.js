@@ -1,16 +1,12 @@
 const balanceService =
-require("../services/balance.service");
+require("../service/balance.service.js");
 
-async function getGroupBalances(
-  req,
-  res
-) {
+async function getGroupBalances(req, res) {
 
   try {
 
     const balances =
-      await balanceService
-      .calculateBalances(
+      await balanceService.calculateBalances(
         req.params.groupId
       );
 
@@ -19,29 +15,21 @@ async function getGroupBalances(
   } catch(error) {
 
     res.status(500).json({
-      error:error.message
+      error: error.message
     });
 
   }
 
 }
 
-async function getUserBreakdown(
-  req,
-  res
-) {
+async function getUserBreakdown(req, res) {
 
   try {
 
-    const { groupId } = req.params;
-
-    const userId = req.user.id;
-
     const breakdown =
-      await balanceService
-      .getUserBreakdown(
-        groupId,
-        userId
+      await balanceService.getUserBreakdown(
+        req.params.groupId,
+        req.user.id
       );
 
     res.json(breakdown);
@@ -55,6 +43,35 @@ async function getUserBreakdown(
   }
 
 }
+
+async function getSettlementSummary(req, res) {
+
+  try {
+
+    const balances =
+      await balanceService.calculateBalances(
+        req.params.groupId
+      );
+
+    const summary =
+      balanceService.simplifyDebts(
+        balances
+      );
+
+    res.json(summary);
+
+  } catch(error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+
+  }
+
+}
+
 module.exports = {
-  getGroupBalances,getUserBreakdown
+  getGroupBalances,
+  getUserBreakdown,
+  getSettlementSummary
 };

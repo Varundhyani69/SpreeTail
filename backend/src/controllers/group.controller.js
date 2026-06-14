@@ -1,5 +1,4 @@
 const groupService = require("../service/group.service.js");
-
 async function getGroups(req, res) {
   try {
     const groups = await groupService.getUserGroups(
@@ -36,34 +35,36 @@ async function createGroup(req, res) {
   }
 }
 
-async function addMember(
-  groupId,
-  userId,
-  joinedAt
-) {
+async function addMember(req, res) {
 
-  const result = await pool.query(
-    `
-    INSERT INTO group_memberships (
-      id,
-      group_id,
-      user_id,
-      joined_at
-    )
-    VALUES ($1,$2,$3,$4)
-    RETURNING *
-    `,
-    [
-      uuidv4(),
-      groupId,
+  try {
+
+    const { groupId } =
+      req.params;
+
+    const {
       userId,
       joinedAt
-    ]
-  );
+    } = req.body;
 
-  return result.rows[0];
+    const member =
+      await groupService.addMember(
+        groupId,
+        userId,
+        joinedAt
+      );
+
+    res.status(201).json(member);
+
+  } catch(error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+
+  }
+
 }
-
 async function leaveGroup(req, res) {
   try {
 
@@ -110,10 +111,11 @@ async function getGroupMembers(req, res) {
   }
 
 }
+
 module.exports = {
   createGroup,
   getGroups,
   addMember,
   leaveGroup,
-  getGroupMembers
+  getGroupMembers,
 };

@@ -6,11 +6,12 @@ const app = express();
 const pool = require("./config/connection.js")
 const authRoutes = require("./routes/auth.routes.js");
 const groupRoutes = require("./routes/group.routes.js");
+const expenseRoutes = require("./routes/expense.routes.js");
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/groups", groupRoutes);
-
+app.use("/api/expenses", expenseRoutes);
 app.get("/", async (req, res) => {
     try {
         const result = await pool.query("SELECT NOW()");

@@ -9,8 +9,11 @@ require("../middleware/auth.middleware");
 
 const {
   getGroupBalances,
-  getUserBreakdown
-} = require("../controllers/balance.controller");
+  getUserBreakdown,
+  getSettlementSummary
+} = require(
+  "../controllers/balance.controller"
+);
 
 router.get(
   "/",
@@ -22,6 +25,12 @@ router.get(
   "/breakdown",
   authenticate,
   getUserBreakdown
+);
+
+router.get(
+  "/summary",
+  authenticate,
+  getSettlementSummary
 );
 
 module.exports = router;

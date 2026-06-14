@@ -113,3 +113,11 @@ For each expense:
 3. Net balance is computed as:
 
 balance = credits - obligations
+
+## settlements
+
+Stores payments made between members.
+
+Purpose:
+
+Reduce outstanding balances without altering historical expenses.

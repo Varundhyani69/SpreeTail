@@ -11,6 +11,12 @@ const {
   getGroups
 } = require("../controllers/group.controller");
 
+const expenseRoutes =
+require("./expense.routes");
+
+const settlementRoutes =
+require("./settlement.routes");
+
 const balanceRoutes =
 require("./balance.routes");
 
@@ -29,8 +35,18 @@ router.post(
 );
 
 router.use(
+  "/:groupId/expenses",
+  expenseRoutes
+);
+
+router.use(
   "/:groupId/balances",
   balanceRoutes
+);
+
+router.use(
+  "/:groupId/settlements",
+  settlementRoutes
 );
 
 router.post(

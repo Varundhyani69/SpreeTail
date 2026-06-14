@@ -1,25 +1,6 @@
 const pool = require("../config/connection.js");
 const { v4: uuidv4 } = require("uuid");
 
-async function createGroup(name, createdBy) {
-
-  const id = uuidv4();
-
-  const result = await pool.query(
-    `
-    INSERT INTO groups (
-      id,
-      name,
-      created_by
-    )
-    VALUES ($1,$2,$3)
-    RETURNING *
-    `,
-    [id, name, createdBy]
-  );
-
-  return result.rows[0];
-}
 
 async function getUserGroups(userId) {
   const result = await pool.query(
@@ -83,7 +64,69 @@ async function getGroupMembers(groupId) {
 
   return result.rows;
 }
+async function addMember(
+  groupId,
+  userId,
+  joinedAt
+) {
 
+  const result = await pool.query(
+    `
+    INSERT INTO group_memberships (
+      id,
+      group_id,
+      user_id,
+      joined_at
+    )
+    VALUES ($1,$2,$3,$4)
+    RETURNING *
+    `,
+    [
+      uuidv4(),
+      groupId,
+      userId,
+      joinedAt
+    ]
+  );
+
+  return result.rows[0];
+}
+async function createGroup(name, createdBy) {
+
+  const id = uuidv4();
+
+  const result = await pool.query(
+    `
+    INSERT INTO groups (
+      id,
+      name,
+      created_by
+    )
+    VALUES ($1,$2,$3)
+    RETURNING *
+    `,
+    [id, name, createdBy]
+  );
+
+  await pool.query(
+    `
+    INSERT INTO group_memberships (
+      id,
+      group_id,
+      user_id,
+      joined_at
+    )
+    VALUES ($1,$2,$3,CURRENT_DATE)
+    `,
+    [
+      uuidv4(),
+      id,
+      createdBy
+    ]
+  );
+
+  return result.rows[0];
+}
 module.exports = {
-  createGroup, getUserGroups,leaveGroup,getGroupMembers
+  createGroup, getUserGroups,leaveGroup,getGroupMembers,addMember
 };

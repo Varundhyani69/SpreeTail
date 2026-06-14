@@ -88,3 +88,31 @@ Recalculate from transactions.
 Balances remain consistent and auditable.
 
 Every balance can be traced back to underlying expenses.
+
+## D006 - Debt Simplification
+
+### Problem
+
+Raw balances are difficult for users to interpret.
+
+### Decision
+
+Convert balances into a minimal set of settlement recommendations.
+
+### Example
+
+Instead of:
+
+Aisha +3000
+Rohan -1000
+Priya -2000
+
+Show:
+
+Rohan → Aisha ₹1000
+
+Priya → Aisha ₹2000
+
+### Benefit
+
+Provides a simple actionable settlement plan.
