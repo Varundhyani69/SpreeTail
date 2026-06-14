@@ -49,3 +49,14 @@ Responsibilities:
 * Login
 * Authorization
 * Group ownership
+
+## Relationship Constraints
+
+groups.created_by -> users.id
+
+group_memberships.group_id -> groups.id
+
+group_memberships.user_id -> users.id
+
+Purpose:
+Prevent orphan records and maintain referential integrity.
