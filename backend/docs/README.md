@@ -27,3 +27,19 @@ Database
 
 - PostgreSQL database configured
 - Connection verified
+
+## Authentication
+
+Implemented Features
+
+* User Registration
+* User Login
+* Password Hashing using bcrypt
+* JWT Authentication
+* Protected API Routes
+
+Endpoints
+
+POST /api/auth/register
+
+POST /api/auth/login

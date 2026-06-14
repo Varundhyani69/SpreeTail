@@ -38,3 +38,14 @@ Columns:
 
 Reason:
 Allows historical expense calculations when members join or leave.
+
+## users
+
+Authentication enabled.
+
+Responsibilities:
+
+* User identity
+* Login
+* Authorization
+* Group ownership

@@ -36,3 +36,22 @@ A user should only participate in expenses that occur during their membership pe
 Meera leaves in March.
 
 Expenses from April onward should not affect her balance.
+
+## D003 - JWT Authentication
+
+### Alternatives
+
+1. Session Authentication
+2. JWT Authentication
+
+### Decision
+
+JWT Authentication
+
+### Reason
+
+Simple implementation suitable for SPA frontend and REST API architecture.
+
+### Tradeoff
+
+Requires token management on client side.
