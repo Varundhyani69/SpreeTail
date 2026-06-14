@@ -47,6 +47,116 @@ async function getUserIdByName(
 
 }
 
+async function isMemberActive(
+  userName,
+  expenseDate
+) {
+
+  const result =
+    await pool.query(
+      `
+      SELECT
+        gm.joined_at,
+        gm.left_at
+      FROM group_memberships gm
+
+      JOIN users u
+        ON u.id = gm.user_id
+
+      WHERE LOWER(u.name)
+        = LOWER($1)
+
+      LIMIT 1
+      `,
+      [userName]
+    );
+
+  if (
+    result.rows.length === 0
+  ) {
+
+    return false;
+
+  }
+
+  const membership =
+    result.rows[0];
+
+  const expense =
+    new Date(
+      expenseDate
+    );
+
+  const joined =
+    new Date(
+      membership.joined_at
+    );
+
+  if (
+    expense < joined
+  ) {
+
+    return false;
+
+  }
+
+  if (
+    membership.left_at
+  ) {
+
+    const left =
+      new Date(
+        membership.left_at
+      );
+
+    if (
+      expense > left
+    ) {
+
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}
+
+async function createImportAnomaly(
+  importId,
+  rowNumber,
+  type,
+  description
+) {
+
+  await pool.query(
+    `
+    INSERT INTO
+    import_anomalies (
+      id,
+      import_id,
+      row_number,
+      anomaly_type,
+      description,
+      suggested_action
+    )
+    VALUES (
+      $1,$2,$3,$4,$5,$6
+    )
+    `,
+    [
+      uuidv4(),
+      importId,
+      rowNumber,
+      type,
+      description,
+      "Excluded from split"
+    ]
+  );
+
+}
+
 async function createExpense(
   row,
   payerId
@@ -351,25 +461,47 @@ if (
     const participantIds =
       [];
 
+
     for (
-      const participant
-      of normalizedRow.splitWith
+    const participant
+    of normalizedRow.splitWith
     ) {
 
-      const userId =
-        await getUserIdByName(
-          participant
+    const active =
+        await isMemberActive(
+        participant,
+        normalizedRow.expenseDate
         );
 
-      if (
+    if (
+        !active
+    ) {
+
+        await createImportAnomaly(
+        importId,
+        normalizedRow.rowNumber,
+        "INVALID_MEMBER_FOR_DATE",
+        `${participant} not active on ${normalizedRow.expenseDate}`
+        );
+
+        continue;
+
+    }
+
+    const userId =
+        await getUserIdByName(
+        participant
+        );
+
+    if (
         userId
-      ) {
+    ) {
 
         participantIds.push(
-          userId
+        userId
         );
 
-      }
+    }
 
     }
 
@@ -386,7 +518,13 @@ if (
         normalizedRow,
         payerId
       );
+    if (
+    participantIds.length === 0
+    ) {
 
+    continue;
+
+    }
     await createParticipants(
       expense.id,
       participantIds,

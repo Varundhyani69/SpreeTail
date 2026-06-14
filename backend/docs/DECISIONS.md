@@ -338,3 +338,11 @@ Depend on import_rows.
 Reason:
 
 Allows execution even if uploaded files are removed from disk.
+
+## D021 - Membership Validation
+
+Decision:
+Participants are included only if they were active members on the expense date.
+
+Reason:
+Prevents charging users for expenses before they joined or after they left the group.

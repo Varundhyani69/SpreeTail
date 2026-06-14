@@ -361,3 +361,18 @@ Planned:
 * Settlement conversion
 * Currency conversion
 * Membership validation
+
+### Membership Date Rules
+
+A participant is eligible for an expense only if:
+
+expense_date >= joined_at
+
+and
+
+expense_date <= left_at (if left_at exists)
+
+Otherwise:
+
+- Participant excluded
+- Import anomaly created
