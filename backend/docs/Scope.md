@@ -121,3 +121,146 @@ Stores payments made between members.
 Purpose:
 
 Reduce outstanding balances without altering historical expenses.
+
+## CSV Import Analysis
+
+### Implemented Features
+
+* CSV upload endpoint
+* CSV parsing using csv-parser
+* Import tracking system
+* Import anomaly tracking system
+* Import report generation
+* Anomaly approval workflow
+
+### Import Workflow
+
+1. User uploads CSV file
+2. CSV rows are parsed
+3. Anomaly detection engine runs
+4. Import record is created
+5. Anomalies are stored
+6. Import report is generated
+7. User reviews anomalies
+8. User approves anomaly resolutions
+
+### Anomalies Detected
+
+#### DUPLICATE_EXPENSE
+
+Policy:
+
+* Flag for manual approval
+* Do not automatically delete
+
+Example:
+
+* Dinner at Marina Bites
+* dinner - marina bites
+
+#### MISSING_PAYER
+
+Policy:
+
+* Flag for manual review
+* Row cannot be imported automatically
+
+Example:
+
+* House cleaning supplies
+
+#### NAME_INCONSISTENCY
+
+Policy:
+
+* Normalize casing during import
+
+Examples:
+
+* priya → Priya
+* rohan → Rohan
+
+#### UNKNOWN_OR_ALIAS_USER
+
+Policy:
+
+* Manual review required
+
+Example:
+
+* Priya S
+
+#### SETTLEMENT_ROW
+
+Policy:
+
+* Convert to settlement transaction
+* Do not import as expense
+
+Example:
+
+* Rohan paid Aisha back
+
+#### MISSING_SPLIT_TYPE
+
+Policy:
+
+* Manual review required
+
+#### INVALID_PERCENTAGE_TOTAL
+
+Policy:
+
+* Flag for review
+* Percentages must total 100%
+
+Example:
+
+* 110%
+
+#### USD_EXPENSE
+
+Policy:
+
+* Convert to INR during import
+* Use documented conversion rate
+
+#### AMOUNT_FORMAT
+
+Policy:
+
+* Remove commas and normalize
+
+Example:
+
+* 1,200 → 1200
+
+#### PRECISION_ROUNDING
+
+Policy:
+
+* Round to two decimal places
+
+Example:
+
+* 899.995 → 900.00
+
+#### NON_STANDARD_DATE
+
+Policy:
+
+* Normalize to ISO format
+
+Example:
+
+* 01/03/2026 → 2026-03-01
+
+#### NEGATIVE_AMOUNT
+
+Policy:
+
+* Treat as refund transaction
+
+Example:
+
+* Parasailing refund

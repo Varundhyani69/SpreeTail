@@ -127,6 +127,33 @@ async function createGroup(name, createdBy) {
 
   return result.rows[0];
 }
+async function isMemberOnDate(
+  userId,
+  groupId,
+  expenseDate
+) {
+
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM group_memberships
+    WHERE user_id = $1
+      AND group_id = $2
+      AND joined_at <= $3
+      AND (
+        left_at IS NULL
+        OR left_at >= $3
+      )
+    `,
+    [
+      userId,
+      groupId,
+      expenseDate
+    ]
+  );
+
+  return result.rows.length > 0;
+}
 module.exports = {
-  createGroup, getUserGroups,leaveGroup,getGroupMembers,addMember
+  createGroup, getUserGroups,leaveGroup,getGroupMembers,addMember,isMemberOnDate
 };
