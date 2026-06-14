@@ -10,7 +10,16 @@ const {
 } = require(
   "./normalizers"
 );
-
+const {
+  convertUsdToInr
+} = require(
+  "./currencyConverter"
+);
+const {
+  parsePercentageDetails,isPercentageValid
+} = require(
+  "./percentageParser"
+);
 const validUsers = [
   "Aisha",
   "Rohan",
@@ -41,12 +50,11 @@ async function getUserIdByName(
     );
 
   return (
-    result.rows[0]?.id ||
-    null
+    result.rows[0]?.id
+    || null
   );
 
 }
-
 async function isMemberActive(
   userName,
   expenseDate
@@ -239,6 +247,64 @@ async function createParticipants(
 
 }
 
+async function createPercentageParticipants(
+  expenseId,
+  amount,
+  splitDetails
+) {
+
+  for (
+    const item
+    of splitDetails
+  ) {
+
+    const userId =
+      await getUserIdByName(
+        item.name
+      );
+
+    if (
+      !userId
+    ) {
+
+      continue;
+
+    }
+
+    const shareAmount =
+      Number(
+        (
+          amount *
+          item.percentage /
+          100
+        ).toFixed(2)
+      );
+
+    await pool.query(
+      `
+      INSERT INTO
+      expense_participants (
+        id,
+        expense_id,
+        user_id,
+        share_amount
+      )
+      VALUES (
+        $1,$2,$3,$4
+      )
+      `,
+      [
+        uuidv4(),
+        expenseId,
+        userId,
+        shareAmount
+      ]
+    );
+
+  }
+
+}
+
 async function getImportRows(
   importId
 ) {
@@ -295,20 +361,7 @@ async function executeImport(
 
   const normalizedRows =
     [];
-if (
-  normalizedRow.currency ===
-  "USD"
-) {
 
-  normalizedRow.amount =
-    convertUsdToInr(
-      normalizedRow.amount
-    );
-
-  normalizedRow.currency =
-    "INR";
-
-}
   let importedExpenses =
     0;
 
@@ -367,11 +420,15 @@ if (
 }
 
     if (
-      row.split_type !==
-      "equal"
-    ) {
+        ![
+            "equal",
+            "percentage"
+        ].includes(
+            row.split_type
+        )
+        ) {
 
-      continue;
+        continue;
 
     }
 
@@ -429,7 +486,20 @@ if (
         row.notes || ""
 
     };
+    if (
+        normalizedRow.currency ===
+        "USD"
+    ) {
 
+    normalizedRow.amount =
+        convertUsdToInr(
+        normalizedRow.amount
+        );
+
+    normalizedRow.currency =
+        "INR";
+
+    }
     normalizedRows.push(
       normalizedRow
     );
@@ -513,23 +583,78 @@ if (
 
     }
 
-    const expense =
-      await createExpense(
-        normalizedRow,
-        payerId
-      );
-    if (
-    participantIds.length === 0
-    ) {
+
+let percentageDetails =
+  null;
+
+if (
+  normalizedRow.splitType ===
+  "percentage"
+) {
+
+  percentageDetails =
+    parsePercentageDetails(
+      row.split_details
+    );
+
+  if (
+    !isPercentageValid(
+      percentageDetails
+    )
+  ) {
+
+    await createImportAnomaly(
+      importId,
+      normalizedRow.rowNumber,
+      "INVALID_PERCENTAGE_TOTAL",
+      "Percentages do not add to 100"
+    );
 
     continue;
 
-    }
-    await createParticipants(
-      expense.id,
-      participantIds,
-      normalizedRow.amount
-    );
+  }
+
+}
+
+// --------------------
+// Create expense
+// --------------------
+
+const expense =
+  await createExpense(
+    normalizedRow,
+    payerId
+  );
+
+// --------------------
+// Create participants
+// --------------------
+
+if (
+  normalizedRow.splitType ===
+  "equal"
+) {
+
+  await createParticipants(
+    expense.id,
+    participantIds,
+    normalizedRow.amount
+  );
+
+}
+
+else if (
+  normalizedRow.splitType ===
+  "percentage"
+) {
+
+  await createPercentageParticipants(
+    expense.id,
+    normalizedRow.amount,
+    percentageDetails
+  );
+
+}
 
     importedExpenses++;
 
@@ -558,32 +683,7 @@ if (
 
 }
 
-async function getUserIdByName(
-  name
-) {
 
-  if (!name) {
-    return null;
-  }
-
-  const result =
-    await pool.query(
-      `
-      SELECT id
-      FROM users
-      WHERE LOWER(name)
-      = LOWER($1)
-      LIMIT 1
-      `,
-      [name]
-    );
-
-  return (
-    result.rows[0]?.id
-    || null
-  );
-
-}
 
 async function createSettlement(
   payerId,
