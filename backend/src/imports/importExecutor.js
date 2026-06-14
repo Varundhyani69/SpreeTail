@@ -1,6 +1,7 @@
 const pool =
 require("../config/connection");
-
+const { v4: uuidv4 } =
+require("uuid");
 const {
   normalizeAmount,
   normalizeDate,
@@ -18,6 +19,115 @@ const validUsers = [
   "Dev",
   "Sam"
 ];
+
+async function getUserIdByName(
+  name
+) {
+
+  if (!name) {
+    return null;
+  }
+
+  const result =
+    await pool.query(
+      `
+      SELECT id
+      FROM users
+      WHERE LOWER(name)
+      = LOWER($1)
+      LIMIT 1
+      `,
+      [name]
+    );
+
+  return (
+    result.rows[0]?.id ||
+    null
+  );
+
+}
+
+async function createExpense(
+  row,
+  payerId
+) {
+
+  const result =
+    await pool.query(
+      `
+      INSERT INTO expenses (
+        id,
+        group_id,
+        title,
+        amount,
+        paid_by,
+        expense_date,
+        split_type
+      )
+      VALUES (
+        $1,$2,$3,$4,
+        $5,$6,$7
+      )
+      RETURNING *
+      `,
+      [
+        uuidv4(),
+        process.env.IMPORT_GROUP_ID,
+        row.description,
+        row.amount,
+        payerId,
+        row.expenseDate,
+        row.splitType
+      ]
+    );
+
+  return result.rows[0];
+
+}
+
+async function createParticipants(
+  expenseId,
+  participantIds,
+  amount
+) {
+
+  const share =
+    Number(
+      (
+        amount /
+        participantIds.length
+      ).toFixed(2)
+    );
+
+  for (
+    const userId
+    of participantIds
+  ) {
+
+    await pool.query(
+      `
+      INSERT INTO
+      expense_participants (
+        id,
+        expense_id,
+        user_id,
+        share_amount
+      )
+      VALUES (
+        $1,$2,$3,$4
+      )
+      `,
+      [
+        uuidv4(),
+        expenseId,
+        userId,
+        share
+      ]
+    );
+
+  }
+
+}
 
 async function getImportRows(
   importId
@@ -42,6 +152,28 @@ async function executeImport(
   importId
 ) {
 
+  const importResult =
+    await pool.query(
+      `
+      SELECT status
+      FROM imports
+      WHERE id = $1
+      `,
+      [importId]
+    );
+
+  if (
+    importResult.rows[0]
+      ?.status ===
+    "COMPLETED"
+  ) {
+
+    throw new Error(
+      "Import already executed"
+    );
+
+  }
+
   const rows =
     await getImportRows(
       importId
@@ -53,6 +185,22 @@ async function executeImport(
 
   const normalizedRows =
     [];
+if (
+  normalizedRow.currency ===
+  "USD"
+) {
+
+  normalizedRow.amount =
+    convertUsdToInr(
+      normalizedRow.amount
+    );
+
+  normalizedRow.currency =
+    "INR";
+
+}
+  let importedExpenses =
+    0;
 
   for (
     const rowRecord
@@ -62,7 +210,51 @@ async function executeImport(
     const row =
       rowRecord.raw_data;
 
-    // Only equal splits for now
+    const isSettlement =
+
+  row.description
+    ?.toLowerCase()
+    .includes(
+      "paid"
+    ) ||
+
+  row.notes
+    ?.toLowerCase()
+    .includes(
+      "settlement"
+    );
+    if (
+  isSettlement
+) {
+
+  const payerId =
+    await getUserIdByName(
+      row.paid_by
+    );
+
+  const receiverId =
+    await getUserIdByName(
+      row.split_with
+    );
+
+  if (
+    payerId &&
+    receiverId
+  ) {
+
+    await createSettlement(
+      payerId,
+      receiverId,
+      normalizeAmount(
+        row.amount
+      )
+    );
+
+  }
+
+  continue;
+
+}
 
     if (
       row.split_type !==
@@ -132,20 +324,165 @@ async function executeImport(
       normalizedRow
     );
 
-    console.log(
-      normalizedRow
+    // skip rows
+    // with missing payer
+
+    if (
+      !normalizedRow.payer
+    ) {
+
+      continue;
+
+    }
+
+    const payerId =
+      await getUserIdByName(
+        normalizedRow.payer
+      );
+
+    if (
+      !payerId
+    ) {
+
+      continue;
+
+    }
+
+    const participantIds =
+      [];
+
+    for (
+      const participant
+      of normalizedRow.splitWith
+    ) {
+
+      const userId =
+        await getUserIdByName(
+          participant
+        );
+
+      if (
+        userId
+      ) {
+
+        participantIds.push(
+          userId
+        );
+
+      }
+
+    }
+
+    if (
+      participantIds.length === 0
+    ) {
+
+      continue;
+
+    }
+
+    const expense =
+      await createExpense(
+        normalizedRow,
+        payerId
+      );
+
+    await createParticipants(
+      expense.id,
+      participantIds,
+      normalizedRow.amount
     );
+
+    importedExpenses++;
 
   }
 
+  await pool.query(
+    `
+    UPDATE imports
+    SET status =
+      'COMPLETED'
+    WHERE id = $1
+    `,
+    [importId]
+  );
+
   return {
+
     processedRows:
       normalizedRows.length,
+
+    importedExpenses,
+
     normalizedRows
+
   };
 
 }
 
+async function getUserIdByName(
+  name
+) {
+
+  if (!name) {
+    return null;
+  }
+
+  const result =
+    await pool.query(
+      `
+      SELECT id
+      FROM users
+      WHERE LOWER(name)
+      = LOWER($1)
+      LIMIT 1
+      `,
+      [name]
+    );
+
+  return (
+    result.rows[0]?.id
+    || null
+  );
+
+}
+
+async function createSettlement(
+  payerId,
+  receiverId,
+  amount
+) {
+
+  const result =
+    await pool.query(
+      `
+      INSERT INTO settlements (
+        id,
+        group_id,
+        payer_id,
+        receiver_id,
+        amount,
+        settlement_date
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,$6
+      )
+      RETURNING *
+      `,
+      [
+        uuidv4(),
+        process.env.IMPORT_GROUP_ID,
+        payerId,
+        receiverId,
+        amount,
+        "2026-02-25"
+      ]
+    );
+
+  return result.rows[0];
+
+}
+
 module.exports = {
-  executeImport
+  executeImport,getUserIdByName,getImportRows
 };
