@@ -15,7 +15,44 @@ const {
 } = require(
   "../imports/anomalyDetector"
 );
+const {
+  executeImport
+} = require(
+  "../imports/importExecutor"
+);
 
+async function runImport(
+  req,
+  res
+) {
+
+  try {
+
+    const {
+      importId
+    } = req.params;
+
+    const result =
+      await executeImport(
+        importId
+      );
+
+    res.json({
+      message:
+        "Import executed",
+        ...result
+    });
+
+  } catch(error) {
+
+    res.status(500).json({
+      error:
+        error.message
+    });
+
+  }
+
+}
 async function uploadCsv(
   req,
   res
@@ -26,21 +63,27 @@ async function uploadCsv(
     const importId =
       uuidv4();
 
+    // ------------------
     // Parse CSV
+    // ------------------
 
     const rows =
       await parseCsv(
         req.file.path
       );
 
+    // ------------------
     // Detect anomalies
+    // ------------------
 
     const anomalies =
       detectAnomalies(
         rows
       );
 
-    // Save import record
+    // ------------------
+    // Save import
+    // ------------------
 
     await pool.query(
       `
@@ -60,7 +103,38 @@ async function uploadCsv(
       ]
     );
 
+    // ------------------
+    // Save raw CSV rows
+    // ------------------
+
+    for (
+      const [index, row]
+      of rows.entries()
+    ) {
+
+      await pool.query(
+        `
+        INSERT INTO import_rows (
+          id,
+          import_id,
+          row_number,
+          raw_data
+        )
+        VALUES ($1,$2,$3,$4)
+        `,
+        [
+          uuidv4(),
+          importId,
+          index + 2,
+          JSON.stringify(row)
+        ]
+      );
+
+    }
+
+    // ------------------
     // Save anomalies
+    // ------------------
 
     for (
       const anomaly
@@ -90,6 +164,10 @@ async function uploadCsv(
       );
 
     }
+
+    // ------------------
+    // Response
+    // ------------------
 
     res.json({
       importId,
@@ -241,5 +319,6 @@ async function approveAnomaly(
 module.exports = {
   uploadCsv,
   getImportReport,
-  approveAnomaly
+  approveAnomaly,
+  runImport
 };

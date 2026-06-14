@@ -234,3 +234,107 @@ Convert during import.
 
 Reason:
 CSV contains legitimate trip expenses recorded in USD.
+
+## D0015 - Raw CSV Rows Are Stored
+
+Options Considered:
+
+1. Parse and discard CSV
+2. Store original rows
+
+Decision:
+
+Store original rows in import_rows.
+
+Reason:
+
+Allows reprocessing, debugging, auditing, and anomaly review without requiring another upload.
+
+---
+
+## D016 - JSONB Used For Raw Rows
+
+Options Considered:
+
+1. Store each CSV column separately
+2. Store raw row as JSONB
+
+Decision:
+
+Store as JSONB.
+
+Reason:
+
+CSV structure may evolve and JSONB preserves the original source format.
+
+---
+
+## D017 - Normalization Before Import
+
+Options Considered:
+
+1. Normalize during upload
+2. Normalize during execution
+
+Decision:
+
+Normalize during execution.
+
+Reason:
+
+Preserves original source data and allows import rules to evolve without requiring re-upload.
+
+---
+
+## D018 - Alias Mapping
+
+Options Considered:
+
+1. Treat aliases as separate users
+2. Normalize known aliases
+
+Decision:
+
+Normalize known aliases.
+
+Example:
+
+Priya S → Priya
+
+Reason:
+
+Evidence suggests the alias refers to the same person.
+
+---
+
+## D019 - ISO Date Standardization
+
+Options Considered:
+
+1. Preserve original date formats
+2. Convert all dates to ISO
+
+Decision:
+
+Convert to ISO format.
+
+Reason:
+
+Ensures consistent querying and database storage.
+
+---
+
+## D020 - Import Execution Is Re-runnable
+
+Options Considered:
+
+1. Depend on uploaded CSV file
+2. Depend on stored import_rows
+
+Decision:
+
+Depend on import_rows.
+
+Reason:
+
+Allows execution even if uploaded files are removed from disk.

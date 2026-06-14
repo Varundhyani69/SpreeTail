@@ -57,3 +57,69 @@ Separated business logic into balance.service.js and kept controllers thin.
 ## Verification Process
 
 All generated code was manually reviewed, tested using Postman, and adjusted where necessary before being committed.
+
+## Additional AI Review Cases
+
+### Case 4 - Import Execution Design
+
+AI Suggestion:
+
+Perform CSV parsing and importing in a single workflow.
+
+Problem:
+
+Difficult to debug and impossible to re-run without the original file.
+
+Correction:
+
+Introduced import_rows table and separated upload from execution.
+
+Result:
+
+Imports became auditable and re-runnable.
+
+---
+
+### Case 5 - Data Normalization Timing
+
+AI Suggestion:
+
+Normalize data immediately during upload.
+
+Problem:
+
+Original source data would be lost.
+
+Correction:
+
+Store original rows and perform normalization during execution.
+
+Result:
+
+Import behavior became traceable and reversible.
+
+---
+
+### Case 6 - Import Architecture
+
+AI Suggestion:
+
+Create expenses immediately after anomaly detection.
+
+Problem:
+
+Violated approval workflow requirements.
+
+Correction:
+
+Separated workflow into:
+
+Upload
+→ Detect
+→ Review
+→ Approve
+→ Execute
+
+Result:
+
+Matches assignment requirements and user approval expectations.

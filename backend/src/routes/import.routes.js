@@ -14,6 +14,7 @@ const {
 } = require(
   "../controllers/import.controller"
 );
+const { runImport } = require("../controllers/import.controller");
 
 const router =
 express.Router();
@@ -40,6 +41,12 @@ router.patch(
   "/anomalies/:id",
   authenticate,
   approveAnomaly
+);
+
+router.post(
+  "/:importId/execute",
+  authenticate,
+  runImport
 );
 
 module.exports =

@@ -264,3 +264,100 @@ Policy:
 Example:
 
 * Parasailing refund
+
+## Import Execution Pipeline
+
+### Implemented Features
+
+* Raw CSV row persistence
+* Import execution service
+* Import execution endpoint
+* Data normalization layer
+* Import processing workflow
+
+### Import Execution Workflow
+
+1. CSV uploaded
+2. Rows parsed
+3. Rows stored in import_rows
+4. Anomalies detected
+5. Anomalies stored
+6. User reviews anomalies
+7. User approves anomaly resolutions
+8. Import execution begins
+9. Rows normalized
+10. Rows prepared for database import
+
+### Raw Data Storage
+
+CSV rows are stored in the import_rows table using JSONB.
+
+Reason:
+
+* Preserves original source data
+* Supports auditing
+* Allows reprocessing without requiring CSV re-upload
+
+### Normalization Rules
+
+#### Amount Normalization
+
+Examples:
+
+* "1,200" → 1200
+* "899.995" → 899.995
+
+Purpose:
+Remove formatting artifacts before import.
+
+---
+
+#### Date Normalization
+
+Examples:
+
+* 01/03/2026 → 2026-03-01
+* 03/03/2026 → 2026-03-03
+
+Purpose:
+Standardize all dates to ISO format.
+
+---
+
+#### User Normalization
+
+Examples:
+
+* priya → Priya
+* rohan → Rohan
+
+Purpose:
+Prevent duplicate user identities caused by inconsistent casing.
+
+---
+
+#### Alias Resolution
+
+Examples:
+
+* Priya S → Priya
+
+Purpose:
+Normalize known aliases during import preparation.
+
+### Current Import Scope
+
+Currently supported during execution:
+
+* Equal split rows
+* Date normalization
+* User normalization
+* Amount normalization
+
+Planned:
+
+* Expense creation
+* Participant creation
+* Settlement conversion
+* Currency conversion
+* Membership validation
