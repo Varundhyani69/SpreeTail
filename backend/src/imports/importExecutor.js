@@ -178,8 +178,9 @@ async function createImportAnomaly(
 }
 
 async function createExpense(
-  row,
-  payerId
+   groupId,
+    normalizedRow,
+    payerId
 ) {
 
   const result =
@@ -202,7 +203,7 @@ async function createExpense(
       `,
       [
         uuidv4(),
-        process.env.IMPORT_GROUP_ID,
+        groupId,
         row.description,
         row.amount,
         payerId,
@@ -354,7 +355,7 @@ async function executeImport(
 const groupId =
   importResult.rows[0]
     ?.group_id;
-    
+
 if (!groupId) {
 
   throw new Error(
@@ -434,16 +435,16 @@ if (
       ) {
 
         await createSettlement(
-            payerId,
-            receiverId,
-            normalizeAmount(
-                row.amount
-            ),
-            normalizeDate(
-                row.date
-            )
-            );
-
+        groupId,
+        payerId,
+        receiverId,
+        normalizeAmount(
+            row.amount
+        ),
+        normalizeDate(
+            row.date
+        )
+        );
         importedSettlements++;
 
       } else {
@@ -864,6 +865,7 @@ async function createUnequalParticipants(
 }
 
 async function createSettlement(
+   groupId,
   payerId,
   receiverId,
   amount,
@@ -888,7 +890,7 @@ async function createSettlement(
       `,
       [
         uuidv4(),
-        process.env.IMPORT_GROUP_ID,
+        groupId,
         payerId,
         receiverId,
         amount,
