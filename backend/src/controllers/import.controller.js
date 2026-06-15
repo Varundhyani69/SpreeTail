@@ -60,6 +60,36 @@ async function uploadCsv(
 
   try {
 
+    const {
+      groupId
+    } = req.params;
+
+    if (
+      !groupId
+    ) {
+
+      return res
+        .status(400)
+        .json({
+          error:
+            "Group ID is required"
+        });
+
+    }
+
+    if (
+      !req.file
+    ) {
+
+      return res
+        .status(400)
+        .json({
+          error:
+            "CSV file is required"
+        });
+
+    }
+
     const importId =
       uuidv4();
 
@@ -86,24 +116,26 @@ async function uploadCsv(
     // ------------------
 
     await pool.query(
-`
-INSERT INTO imports (
-  id,
-  filename,
-  uploaded_by,
-  group_id,
-  status
-)
-VALUES ($1,$2,$3,$4,$5)
-`,
-[
-  importId,
-  req.file.originalname,
-  req.user.id,
-  groupId,
-  "PENDING"
-]
-);
+      `
+      INSERT INTO imports (
+        id,
+        filename,
+        uploaded_by,
+        group_id,
+        status
+      )
+      VALUES (
+        $1,$2,$3,$4,$5
+      )
+      `,
+      [
+        importId,
+        req.file.originalname,
+        req.user.id,
+        groupId,
+        "PENDING"
+      ]
+    );
 
     // ------------------
     // Save raw CSV rows
@@ -122,7 +154,9 @@ VALUES ($1,$2,$3,$4,$5)
           row_number,
           raw_data
         )
-        VALUES ($1,$2,$3,$4)
+        VALUES (
+          $1,$2,$3,$4
+        )
         `,
         [
           uuidv4(),
@@ -153,7 +187,9 @@ VALUES ($1,$2,$3,$4,$5)
           description,
           suggested_action
         )
-        VALUES ($1,$2,$3,$4,$5,$6)
+        VALUES (
+          $1,$2,$3,$4,$5,$6
+        )
         `,
         [
           uuidv4(),
@@ -168,33 +204,45 @@ VALUES ($1,$2,$3,$4,$5)
     }
 
     // ------------------
-    // Response
+    // Success response
     // ------------------
 
-    res.json({
+    return res.json({
+
       importId,
+
+      groupId,
+
+      filename:
+        req.file.originalname,
+
       rows:
         rows.length,
+
       anomalyCount:
         anomalies.length,
+
       anomalies
+
     });
 
   } catch(error) {
 
     console.error(
+      "CSV Upload Error:",
       error
     );
 
-    res.status(500).json({
-      error:
-        error.message
-    });
+    return res
+      .status(500)
+      .json({
+        error:
+          error.message
+      });
 
   }
 
 }
-
 async function getImportReport(
   req,
   res

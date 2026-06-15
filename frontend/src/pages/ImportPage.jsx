@@ -1,8 +1,18 @@
-import { useState } from "react";
+import {
+  useState,
+  useEffect
+} from "react";
+
 import api from "../api/axios";
 import Navbar from "../components/Navbar";
 
 export default function ImportPage(){
+
+  const [groups,setGroups] =
+    useState([]);
+
+  const [groupId,setGroupId] =
+    useState("");
 
   const [file,setFile] =
     useState(null);
@@ -16,62 +26,136 @@ export default function ImportPage(){
   const [loading,setLoading] =
     useState(false);
 
-  async function upload(){
+  useEffect(()=>{
 
-    if(!file){
-      return;
-    }
+    loadGroups();
 
-    setLoading(true);
+  },[]);
 
-    const formData =
-      new FormData();
+  async function loadGroups(){
 
-    formData.append(
-      "file",
-      file
-    );
+    try{
 
-    const res =
-      await api.post(
-        "/imports",
-        formData,
-        {
-          headers:{
-            "Content-Type":
-              "multipart/form-data"
-          }
-        }
+      const res =
+        await api.get(
+          "/groups"
+        );
+
+      setGroups(
+        res.data
       );
 
-    const id =
-      res.data.importId ||
-      res.data.id;
+    }catch(error){
 
-    setImportId(id);
+      console.error(
+        error
+      );
 
-    alert(
-      "CSV uploaded"
-    );
+    }
 
-    setLoading(false);
+  }
+
+  async function upload(){
+
+    if(
+      !groupId ||
+      !file
+    ){
+
+      alert(
+        "Select group and CSV file"
+      );
+
+      return;
+
+    }
+
+    try{
+
+      setLoading(true);
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "file",
+        file
+      );
+
+      const res =
+        await api.post(
+          `/groups/${groupId}/imports`,
+          formData,
+          {
+            headers:{
+              "Content-Type":
+                "multipart/form-data"
+            }
+          }
+        );
+
+      const id =
+        res.data.importId;
+
+      setImportId(
+        id
+      );
+
+      alert(
+        `CSV uploaded.
+Rows: ${res.data.rows}
+Anomalies: ${res.data.anomalyCount}`
+      );
+
+    }catch(error){
+
+      alert(
+        error.response?.data?.error
+        || error.message
+      );
+
+    }finally{
+
+      setLoading(false);
+
+    }
 
   }
 
   async function loadReport(){
 
-    if(!importId){
-      return;
-    }
+    if(
+      !groupId ||
+      !importId
+    ){
 
-    const res =
-      await api.get(
-        `/imports/${importId}/report`
+      alert(
+        "Upload CSV first"
       );
 
-    setReport(
-      res.data
-    );
+      return;
+
+    }
+
+    try{
+
+      const res =
+        await api.get(
+          `/groups/${groupId}/imports/${importId}/report`
+        );
+
+      setReport(
+        res.data
+      );
+
+    }catch(error){
+
+      alert(
+        error.response?.data?.error
+        || error.message
+      );
+
+    }
 
   }
 
@@ -79,28 +163,50 @@ export default function ImportPage(){
     anomalyId
   ){
 
-    await api.patch(
-      `/imports/anomalies/${anomalyId}`,
-      {
-        approved:true
-      }
-    );
+    try{
 
-    loadReport();
+      await api.patch(
+        `/groups/${groupId}/imports/anomalies/${anomalyId}`,
+        {
+          approved:true
+        }
+      );
+
+      await loadReport();
+
+    }catch(error){
+
+      alert(
+        error.response?.data?.error
+        || error.message
+      );
+
+    }
 
   }
 
   async function executeImport(){
 
-    await api.post(
-      `/imports/${importId}/execute`
-    );
+    try{
 
-    alert(
-      "Import executed"
-    );
+      await api.post(
+        `/groups/${groupId}/imports/${importId}/execute`
+      );
 
-    loadReport();
+      alert(
+        "Import executed successfully"
+      );
+
+      await loadReport();
+
+    }catch(error){
+
+      alert(
+        error.response?.data?.error
+        || error.message
+      );
+
+    }
 
   }
 
@@ -115,18 +221,43 @@ export default function ImportPage(){
           CSV Import
         </h1>
 
-        {/* Upload */}
-
         <div className="bg-white rounded-xl shadow p-6 mb-8">
 
           <h2 className="text-xl mb-4">
             Upload CSV
           </h2>
 
+          <select
+            value={groupId}
+            onChange={e=>
+              setGroupId(
+                e.target.value
+              )
+            }
+            className="border p-2 rounded w-full mb-4"
+          >
+
+            <option value="">
+              Select Group
+            </option>
+
+            {groups.map(group=>(
+
+              <option
+                key={group.id}
+                value={group.id}
+              >
+                {group.name}
+              </option>
+
+            ))}
+
+          </select>
+
           <input
             type="file"
             accept=".csv"
-            onChange={(e)=>
+            onChange={e=>
               setFile(
                 e.target.files[0]
               )
@@ -139,7 +270,7 @@ export default function ImportPage(){
               onClick={upload}
               className="bg-black text-white px-4 py-2 rounded"
             >
-              Upload
+              Upload CSV
             </button>
 
             <button
@@ -151,21 +282,21 @@ export default function ImportPage(){
 
           </div>
 
-          {loading &&
-            <p className="mt-4">
+          {loading && (
+
+            <div className="mt-4">
               Uploading...
-            </p>
-          }
+            </div>
+
+          )}
 
         </div>
-
-        {/* Import ID */}
 
         {importId && (
 
           <div className="bg-white rounded-xl shadow p-4 mb-8">
 
-            <div className="font-medium">
+            <div className="font-semibold">
               Import ID
             </div>
 
@@ -177,34 +308,58 @@ export default function ImportPage(){
 
         )}
 
-        {/* Report */}
-
         {report && (
 
           <>
-
-            {/* Summary */}
-
             <div className="bg-white rounded-xl shadow p-6 mb-8">
 
               <h2 className="text-xl mb-4">
                 Import Summary
               </h2>
 
-              <pre className="text-sm overflow-auto">
-                {JSON.stringify(
-                  report,
-                  null,
-                  2
-                )}
-              </pre>
+              <div className="grid grid-cols-3 gap-4">
+
+                <div className="border rounded p-4">
+
+                  <div className="text-sm text-gray-500">
+                    Status
+                  </div>
+
+                  <div>
+                    {report.import?.status}
+                  </div>
+
+                </div>
+
+                <div className="border rounded p-4">
+
+                  <div className="text-sm text-gray-500">
+                    File
+                  </div>
+
+                  <div>
+                    {report.import?.filename}
+                  </div>
+
+                </div>
+
+                <div className="border rounded p-4">
+
+                  <div className="text-sm text-gray-500">
+                    Anomalies
+                  </div>
+
+                  <div>
+                    {report.anomalyCount}
+                  </div>
+
+                </div>
+
+              </div>
 
             </div>
 
-            {/* Anomalies */}
-
-            {report.anomalies &&
-            report.anomalies.length > 0 && (
+            {report.anomalies?.length > 0 && (
 
               <div className="bg-white rounded-xl shadow p-6 mb-8">
 
@@ -222,10 +377,8 @@ export default function ImportPage(){
                       className="border rounded p-4"
                     >
 
-                      <div>
-                        <strong>
-                          {anomaly.anomaly_type}
-                        </strong>
+                      <div className="font-medium">
+                        {anomaly.anomaly_type}
                       </div>
 
                       <div>
@@ -233,9 +386,7 @@ export default function ImportPage(){
                       </div>
 
                       <div className="text-sm text-gray-500">
-                        Row:
-                        {" "}
-                        {anomaly.row_number}
+                        Row {anomaly.row_number}
                       </div>
 
                       <div className="mt-3">
@@ -273,8 +424,6 @@ export default function ImportPage(){
 
             )}
 
-            {/* Execute */}
-
             <div className="bg-white rounded-xl shadow p-6">
 
               <h2 className="text-xl mb-4">
@@ -291,7 +440,6 @@ export default function ImportPage(){
             </div>
 
           </>
-
         )}
 
       </div>
