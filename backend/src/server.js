@@ -8,7 +8,15 @@ const authRoutes = require("./routes/auth.routes.js");
 const groupRoutes = require("./routes/group.routes.js");
 const expenseRoutes = require("./routes/expense.routes.js");
 const importRoutes = require("./routes/import.routes.js");
-app.use(cors());
+
+app.use(cors({
+  origin: [
+    process.env.FRONTEND_URL,
+    "http://localhost:5173"
+  ]
+}));
+
+
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/groups", groupRoutes);
