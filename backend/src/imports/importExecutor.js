@@ -344,13 +344,24 @@ async function executeImport(
 
   const importResult =
   await pool.query(
-    `
-    SELECT status, group_id
-    FROM imports
-    WHERE id = $1
-    `,
-    [importId]
-  );
+  `
+  UPDATE imports
+  SET
+    status = 'COMPLETED',
+    processed_rows = $2,
+    imported_expenses = $3,
+    imported_settlements = $4,
+    skipped_rows = $5
+  WHERE id = $1
+  `,
+  [
+    importId,
+    normalizedRows.length,
+    importedExpenses,
+    importedSettlements,
+    skippedRows
+  ]
+);
 
 const groupId =
   importResult.rows[0]
@@ -723,10 +734,11 @@ if (
     // -------------------
 
     const expense =
-      await createExpense(
-        normalizedRow,
-        payerId
-      );
+  await createExpense(
+    groupId,
+    normalizedRow,
+    payerId
+  );
 
     // -------------------
     // Create participants

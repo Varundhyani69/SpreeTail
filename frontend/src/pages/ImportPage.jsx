@@ -25,7 +25,11 @@ export default function ImportPage(){
 
   const [loading,setLoading] =
     useState(false);
+const [reportLoading,setReportLoading] =
+  useState(false);
 
+const [executeLoading,setExecuteLoading] =
+  useState(false);
   useEffect(()=>{
 
     loadGroups();
@@ -124,92 +128,146 @@ Anomalies: ${res.data.anomalyCount}`
 
   async function loadReport(){
 
-    if(
-      !groupId ||
-      !importId
-    ){
-
-      alert(
-        "Upload CSV first"
-      );
-
-      return;
-
-    }
-
-    try{
-
-      const res =
-        await api.get(
-          `/groups/${groupId}/imports/${importId}/report`
-        );
-
-      setReport(
-        res.data
-      );
-
-    }catch(error){
-
-      alert(
-        error.response?.data?.error
-        || error.message
-      );
-
-    }
-
-  }
-
-  async function approveAnomaly(
-    anomalyId
+  if(
+    !groupId ||
+    !importId
   ){
 
-    try{
+    alert(
+      "Upload CSV first"
+    );
 
-      await api.patch(
-        `/groups/${groupId}/imports/anomalies/${anomalyId}`,
-        {
-          approved:true
-        }
-      );
-
-      await loadReport();
-
-    }catch(error){
-
-      alert(
-        error.response?.data?.error
-        || error.message
-      );
-
-    }
+    return;
 
   }
 
+  try{
+
+    setReportLoading(true);
+
+    const res =
+      await api.get(
+        `/groups/${groupId}/imports/${importId}/report`
+      );
+
+    setReport(
+      res.data
+    );
+
+  }catch(error){
+
+    alert(
+      error.response?.data?.error
+      || error.message
+    );
+
+  }finally{
+
+    setReportLoading(false);
+
+  }
+
+}
+
+  async function updateAnomaly(
+  anomalyId,
+  action
+){
+
+  try{
+
+    await api.patch(
+      `/groups/${groupId}/imports/anomalies/${anomalyId}`,
+      {
+        action
+      }
+    );
+
+    await loadReport();
+
+  }catch(error){
+
+    alert(
+      error.response?.data?.error
+      || error.message
+    );
+
+  }
+
+}
   async function executeImport(){
 
-    try{
+  try{
 
-      await api.post(
-        `/groups/${groupId}/imports/${importId}/execute`
-      );
+    setExecuteLoading(true);
 
-      alert(
-        "Import executed successfully"
-      );
+    await api.post(
+      `/groups/${groupId}/imports/${importId}/execute`
+    );
 
-      await loadReport();
+    alert(
+      "Import executed successfully"
+    );
 
-    }catch(error){
+    await loadReport();
 
-      alert(
-        error.response?.data?.error
-        || error.message
-      );
+  }catch(error){
 
-    }
+    alert(
+      error.response?.data?.error
+      || error.message
+    );
+
+  }finally{
+
+    setExecuteLoading(false);
 
   }
 
+}
+function downloadReport(){
+
+  if(!report){
+    return;
+  }
+
+  const blob =
+    new Blob(
+      [
+        JSON.stringify(
+          report,
+          null,
+          2
+        )
+      ],
+      {
+        type:
+          "application/json"
+      }
+    );
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+  const a =
+    document.createElement(
+      "a"
+    );
+
+  a.href = url;
+
+  a.download =
+    `import-report-${importId}.json`;
+
+  a.click();
+
+  URL.revokeObjectURL(
+    url
+  );
+
+}
   return(
 
     <>
@@ -310,137 +368,312 @@ Anomalies: ${res.data.anomalyCount}`
 
         {report && (
 
-          <>
-            <div className="bg-white rounded-xl shadow p-6 mb-8">
+  <>
 
-              <h2 className="text-xl mb-4">
-                Import Summary
-              </h2>
+    <div className="bg-white rounded-xl shadow p-6 mb-8">
 
-              <div className="grid grid-cols-3 gap-4">
+      <div className="flex justify-between items-center mb-4">
 
-                <div className="border rounded p-4">
+        <h2 className="text-xl font-semibold">
+          Import Summary
+        </h2>
 
-                  <div className="text-sm text-gray-500">
-                    Status
-                  </div>
+        <button
+          onClick={downloadReport}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Download Report
+        </button>
 
-                  <div>
-                    {report.import?.status}
-                  </div>
+      </div>
 
-                </div>
+      <div className="grid md:grid-cols-4 gap-4">
 
-                <div className="border rounded p-4">
+        <div className="border rounded p-4">
+          <div className="text-sm text-gray-500">
+            Status
+          </div>
+          <div className="font-semibold">
+            {report.import?.status}
+          </div>
+        </div>
 
-                  <div className="text-sm text-gray-500">
-                    File
-                  </div>
+        <div className="border rounded p-4">
+          <div className="text-sm text-gray-500">
+            File
+          </div>
+          <div className="font-semibold break-all">
+            {report.import?.filename}
+          </div>
+        </div>
 
-                  <div>
-                    {report.import?.filename}
-                  </div>
+        <div className="border rounded p-4">
+          <div className="text-sm text-gray-500">
+            Anomalies
+          </div>
+          <div className="font-semibold">
+            {report.anomalyCount}
+          </div>
+        </div>
 
-                </div>
+        <div className="border rounded p-4">
+          <div className="text-sm text-gray-500">
+            Group
+          </div>
+          <div className="font-semibold text-xs break-all">
+            {report.import?.group_id || "-"}
+          </div>
+        </div>
 
-                <div className="border rounded p-4">
+        <div className="border rounded p-4">
+          <div className="text-sm text-gray-500">
+            Processed Rows
+          </div>
+          <div className="font-semibold">
+            {report.import?.processed_rows}
+          </div>
+        </div>
 
-                  <div className="text-sm text-gray-500">
-                    Anomalies
-                  </div>
+        <div className="border rounded p-4">
+          <div className="text-sm text-gray-500">
+            Imported Expenses
+          </div>
+          <div className="font-semibold">
+            {report.import?.imported_expenses}
+          </div>
+        </div>
 
-                  <div>
-                    {report.anomalyCount}
-                  </div>
+        <div className="border rounded p-4">
+          <div className="text-sm text-gray-500">
+            Imported Settlements
+          </div>
+          <div className="font-semibold">
+            {report.import?.imported_settlements}
+          </div>
+        </div>
 
-                </div>
+        <div className="border rounded p-4">
+          <div className="text-sm text-gray-500">
+            Skipped Rows
+          </div>
+          <div className="font-semibold">
+            {report.import?.skipped_rows}
+          </div>
+        </div>
 
-              </div>
+      </div>
 
-            </div>
+    </div>
 
-            {report.anomalies?.length > 0 && (
+    <div className="bg-white rounded-xl shadow p-6 mb-8 overflow-x-auto">
 
-              <div className="bg-white rounded-xl shadow p-6 mb-8">
+      <h2 className="text-xl font-semibold mb-4">
+        Import Report
+      </h2>
 
-                <h2 className="text-xl mb-4">
-                  Anomalies
-                </h2>
+      {report.anomalies?.length === 0 ? (
 
-                <div className="space-y-4">
+        <div className="text-gray-500">
+          No anomalies detected.
+        </div>
 
-                  {report.anomalies.map(
-                    anomaly => (
+      ) : (
 
-                    <div
-                      key={anomaly.id}
-                      className="border rounded p-4"
-                    >
+        <table className="w-full border-collapse">
 
-                      <div className="font-medium">
-                        {anomaly.anomaly_type}
-                      </div>
+          <thead>
 
-                      <div>
-                        {anomaly.description}
-                      </div>
+            <tr className="border-b bg-gray-50">
 
-                      <div className="text-sm text-gray-500">
-                        Row {anomaly.row_number}
-                      </div>
+              <th className="text-left p-3">
+                Row
+              </th>
 
-                      <div className="mt-3">
+              <th className="text-left p-3">
+                Type
+              </th>
 
-                        {anomaly.approved ? (
+              <th className="text-left p-3">
+                Description
+              </th>
 
-                          <span className="text-green-600">
-                            Approved
-                          </span>
+              <th className="text-left p-3">
+                Suggested Action
+              </th>
 
-                        ) : (
+              <th className="text-left p-3">
+                Action Taken
+              </th>
 
-                          <button
-                            onClick={()=>
-                              approveAnomaly(
-                                anomaly.id
-                              )
-                            }
-                            className="bg-black text-white px-3 py-1 rounded"
-                          >
-                            Approve
-                          </button>
+              <th className="text-left p-3">
+                Status
+              </th>
 
-                        )}
+              <th className="text-left p-3">
+                Actions
+              </th>
 
-                      </div>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {report.anomalies.map(
+              anomaly => (
+
+              <tr
+                key={anomaly.id}
+                className="border-b"
+              >
+
+                <td className="p-3">
+                  {anomaly.row_number}
+                </td>
+
+                <td className="p-3">
+                  {anomaly.anomaly_type}
+                </td>
+
+                <td className="p-3">
+                  {anomaly.description}
+                </td>
+
+                <td className="p-3">
+                  {anomaly.suggested_action || "-"}
+                </td>
+
+                <td className="p-3">
+
+                  {anomaly.action_taken ? (
+
+                    <span className="font-medium">
+                      {anomaly.action_taken}
+                    </span>
+
+                  ) : (
+
+                    "-"
+                  )}
+
+                </td>
+
+                <td className="p-3">
+
+                  {anomaly.resolved_at ? (
+
+                    <span className="text-green-600 font-medium">
+                      Resolved
+                    </span>
+
+                  ) : (
+
+                    <span className="text-yellow-600 font-medium">
+                      Pending
+                    </span>
+
+                  )}
+
+                </td>
+
+                <td className="p-3">
+
+                  {!anomaly.resolved_at && (
+
+                    <div className="flex gap-2">
+
+                      <button
+                        onClick={() =>
+                          updateAnomaly(
+                            anomaly.id,
+                            "APPROVE"
+                          )
+                        }
+                        className="bg-green-600 text-white px-2 py-1 rounded text-sm"
+                      >
+                        Approve
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          updateAnomaly(
+                            anomaly.id,
+                            "SKIP"
+                          )
+                        }
+                        className="bg-yellow-500 text-white px-2 py-1 rounded text-sm"
+                      >
+                        Skip
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          updateAnomaly(
+                            anomaly.id,
+                            "REJECT"
+                          )
+                        }
+                        className="bg-red-600 text-white px-2 py-1 rounded text-sm"
+                      >
+                        Reject
+                      </button>
 
                     </div>
 
-                  ))}
+                  )}
 
-                </div>
+                </td>
 
-              </div>
+              </tr>
 
-            )}
+            ))}
 
-            <div className="bg-white rounded-xl shadow p-6">
+          </tbody>
 
-              <h2 className="text-xl mb-4">
-                Execute Import
-              </h2>
+        </table>
 
-              <button
-                onClick={executeImport}
-                className="bg-green-600 text-white px-5 py-2 rounded"
-              >
-                Run Import
-              </button>
+      )}
 
-            </div>
+    </div>
 
-          </>
-        )}
+    <div className="bg-white rounded-xl shadow p-6">
+
+      <h2 className="text-xl font-semibold mb-4">
+        Execute Import
+      </h2>
+
+      <button
+        disabled={executeLoading}
+        onClick={executeImport}
+        className="
+          bg-green-600
+          text-white
+          px-5
+          py-2
+          rounded
+          disabled:opacity-50
+        "
+      >
+        {
+          executeLoading
+          ? "Executing..."
+          : "Run Import"
+        }
+      </button>
+
+      {executeLoading && (
+
+        <div className="mt-3 text-gray-500">
+          Processing import...
+        </div>
+
+      )}
+
+    </div>
+
+  </>
+
+)}
 
       </div>
     </>

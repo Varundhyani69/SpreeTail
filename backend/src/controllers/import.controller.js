@@ -21,6 +21,9 @@ const {
   "../imports/importExecutor"
 );
 
+const importService =
+require("../service/import.service");
+
 async function runImport(
   req,
   res
@@ -309,38 +312,50 @@ async function getImportReport(
 
 }
 
-async function approveAnomaly(
+async function updateAnomaly(
   req,
   res
-) {
+){
 
-  try {
+  try{
 
     const { id } =
       req.params;
 
-    const {
-      approved
-    } = req.body;
+    const { action } =
+      req.body;
 
-    const result =
-      await pool.query(
-        `
-        UPDATE import_anomalies
-        SET approved = $1
-        WHERE id = $2
-        RETURNING *
-        `,
-        [
-          approved,
-          id
-        ]
-      );
+    const allowedActions = [
+      "APPROVE",
+      "SKIP",
+      "REJECT"
+    ];
 
-    if (
-      result.rows
-        .length === 0
-    ) {
+    if(
+      !allowedActions.includes(
+        action
+      )
+    ){
+
+      return res
+        .status(400)
+        .json({
+          error:
+            "Invalid action"
+        });
+
+    }
+
+    const anomaly =
+      await importService
+        .updateAnomalyAction(
+          id,
+          action
+        );
+
+    if(
+      !anomaly
+    ){
 
       return res
         .status(404)
@@ -352,10 +367,10 @@ async function approveAnomaly(
     }
 
     res.json(
-      result.rows[0]
+      anomaly
     );
 
-  } catch(error) {
+  }catch(error){
 
     res.status(500).json({
       error:
@@ -365,10 +380,9 @@ async function approveAnomaly(
   }
 
 }
-
 module.exports = {
   uploadCsv,
   getImportReport,
-  approveAnomaly,
+  updateAnomaly,
   runImport
 };

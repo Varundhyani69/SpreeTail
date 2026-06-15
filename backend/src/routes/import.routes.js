@@ -10,11 +10,11 @@ require("../middleware/auth.middleware");
 const {
   uploadCsv,
   getImportReport,
-  approveAnomaly
+  updateAnomaly,
+  runImport
 } = require(
   "../controllers/import.controller"
 );
-const { runImport } = require("../controllers/import.controller");
 
 const router =
 express.Router({
@@ -42,9 +42,8 @@ router.get(
 router.patch(
   "/anomalies/:id",
   authenticate,
-  approveAnomaly
+  updateAnomaly
 );
-
 router.post(
   "/:importId/execute",
   authenticate,
